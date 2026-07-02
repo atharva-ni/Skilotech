@@ -1,48 +1,93 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { User, UserRole, mockUsers, Payment, mockPayments } from '@/data/mock';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useUser, useAuth as useClerkAuth } from '@clerk/nextjs';
+import { User, UserRole, Payment } from '@/data/mock';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
+  enrolledCourseIds: string[];
+  payments: Payment[];
+  refreshProfile: () => Promise<void>;
+  enrollInCourse: (courseId: string) => void;
+  addPayment: (payment: any) => void;
+  // Deprecated mock methods kept for backward compatibility:
   login: (role: UserRole) => void;
   logout: () => void;
   setRole: (role: UserRole) => void;
-  enrolledCourseIds: string[];
-  enrollInCourse: (courseId: string) => void;
-  payments: Payment[];
-  addPayment: (payment: Payment) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
+  isLoading: true,
+  enrolledCourseIds: [],
+  payments: [],
+  refreshProfile: async () => {},
+  enrollInCourse: () => {},
+  addPayment: () => {},
   login: () => {},
   logout: () => {},
   setRole: () => {},
-  enrolledCourseIds: [],
-  enrollInCourse: () => {},
-  payments: [],
-  addPayment: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>(['course-1', 'course-2']);
-  const [payments, setPayments] = useState<Payment[]>(mockPayments);
+  const { isLoaded, isSignedIn, user: clerkUser } = useUser();
+  const { signOut } = useClerkAuth();
+  
+  const [dbUser, setDbUser] = useState<User | null>(null);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<string[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = useCallback((role: UserRole) => {
-    setUser(mockUsers[role]);
+  const fetchProfile = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch('/api/users/me');
+      if (res.ok) {
+        const data = await res.json();
+        setDbUser(data.user);
+        setEnrolledCourseIds(data.enrolledCourseIds || []);
+        
+        // Map DB payments into mock Payment types
+        const mappedPayments: Payment[] = (data.payments || []).map((p: any) => ({
+          id: p.id,
+          studentName: data.user.name,
+          courseName: p.metadata?.courseTitle || 'Course Purchase',
+          amount: p.amount / 100, // convert paise to INR
+          status: p.status === 'completed' ? 'completed' : p.status === 'failed' ? 'failed' : 'pending',
+          date: p.paidAt ? p.paidAt.slice(0, 10) : p.createdAt.slice(0, 10),
+          method: p.method || 'UPI',
+          invoiceId: p.razorpayOrderId || 'INV-' + p.id.substring(0, 8).toUpperCase(),
+        }));
+        setPayments(mappedPayments);
+      } else {
+        setDbUser(null);
+        setEnrolledCourseIds([]);
+        setPayments([]);
+      }
+    } catch (err) {
+      console.error('Error fetching user profile:', err);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const logout = useCallback(() => {
-    setUser(null);
-  }, []);
-
-  const setRole = useCallback((role: UserRole) => {
-    setUser(mockUsers[role]);
-  }, []);
+  // Fetch database user whenever Clerk login state changes
+  useEffect(() => {
+    if (isLoaded) {
+      if (isSignedIn) {
+        fetchProfile();
+      } else {
+        setDbUser(null);
+        setEnrolledCourseIds([]);
+        setPayments([]);
+        setIsLoading(false);
+      }
+    }
+  }, [isLoaded, isSignedIn, fetchProfile]);
 
   const enrollInCourse = useCallback((courseId: string) => {
     setEnrolledCourseIds((prev) => {
@@ -51,21 +96,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addPayment = useCallback((payment: Payment) => {
+  const addPayment = useCallback((payment: any) => {
     setPayments((prev) => [payment, ...prev]);
+  }, []);
+
+  // Keep compatibility for mock methods (instruct dashboard users to use Clerk instead)
+  const login = useCallback((role: UserRole) => {
+    console.warn('login() is deprecated. Please sign in via Clerk.');
+  }, []);
+
+  const logout = useCallback(() => {
+    signOut();
+  }, [signOut]);
+
+  const setRole = useCallback((role: UserRole) => {
+    console.warn('setRole() is deprecated. Roles are managed in the database.');
   }, []);
 
   return (
     <AuthContext.Provider value={{
-      user,
-      isAuthenticated: !!user,
+      user: dbUser,
+      isAuthenticated: !!dbUser,
+      isLoading: isLoading || !isLoaded,
+      enrolledCourseIds,
+      payments,
+      refreshProfile: fetchProfile,
+      enrollInCourse,
+      addPayment,
       login,
       logout,
-      setRole,
-      enrolledCourseIds,
-      enrollInCourse,
-      payments,
-      addPayment
+      setRole
     }}>
       {children}
     </AuthContext.Provider>

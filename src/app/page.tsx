@@ -1,7 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 
 const features = [
@@ -45,6 +47,33 @@ const stats = [
 ];
 
 export default function LandingPage() {
+  const { isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+
+  // Redirect signed-in users to dashboard
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace('/dashboard');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  // Show nothing while checking auth or redirecting
+  if (!isLoaded || isSignedIn) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', background: '#0a0e1a'
+      }}>
+        <div style={{
+          width: '40px', height: '40px', borderRadius: '50%',
+          border: '3px solid rgba(255,255,255,0.1)',
+          borderTop: '3px solid #6366f1',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.landing}>
       {/* Navigation */}
@@ -57,8 +86,8 @@ export default function LandingPage() {
           <div className={styles.navLinks}>
             <a href="#features" className={styles.navLink}>Features</a>
             <a href="#stats" className={styles.navLink}>Stats</a>
-            <Link href="/login" className={styles.navLink}>Sign In</Link>
-            <Link href="/login" className={`btn btn-primary ${styles.ctaBtn}`}>
+            <Link href="/sign-in" className={styles.navLink}>Sign In</Link>
+            <Link href="/sign-up" className={`btn btn-primary ${styles.ctaBtn}`}>
               Get Started
             </Link>
           </div>
@@ -83,7 +112,7 @@ export default function LandingPage() {
             and connect directly with top employers. All in one platform.
           </p>
           <div className={styles.heroActions}>
-            <Link href="/login" className="btn btn-primary btn-lg">
+            <Link href="/sign-up" className="btn btn-primary btn-lg">
               Start Learning Free →
             </Link>
             <Link href="#features" className="btn btn-secondary btn-lg">
@@ -144,7 +173,7 @@ export default function LandingPage() {
             <p className={styles.ctaText}>
               Join thousands of learners who are building the skills employers want. Start with free courses today.
             </p>
-            <Link href="/login" className="btn btn-primary btn-lg">
+            <Link href="/sign-up" className="btn btn-primary btn-lg">
               Join Skillzy Now →
             </Link>
           </div>

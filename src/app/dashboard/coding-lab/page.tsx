@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Editor from '@monaco-editor/react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { toast } from 'sonner';
 
 interface AiFeedbackType {
   score: number;
@@ -398,56 +401,163 @@ const problemFeedback: Record<string, AiFeedbackType> = {
 
 type Language = 'javascript' | 'python' | 'cpp' | 'java';
 
-export default function CodingLab() {
+interface TestResult {
+  passed: boolean;
+  summary: string;
+  passedCount: number;
+  totalCount: number;
+}
+
+interface ExecutionOutput {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  timeMs: number;
+  usedDocker: boolean;
+  isTimeout: boolean;
+  testResults: TestResult | null;
+}
+
+function CodingLabInner() {
+  const searchParams = useSearchParams();
+  const stepId = searchParams.get('stepId');
+
   const [language, setLanguage] = useState<Language>('javascript');
   const [selectedProblemId, setSelectedProblemId] = useState('reverse');
-  const activeProblem = codingProblems.find((problem) => problem.id === selectedProblemId) ?? codingProblems[0];
-  const [code, setCode] = useState(activeProblem.starterCode.javascript);
-  const [output, setOutput] = useState('Click "Run Code" to view console output here.');
+  const [code, setCode] = useState('');
+  const [activeTab, setActiveTab] = useState<'console' | 'report'>('console');
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAiFeedback, setShowAiFeedback] = useState(false);
   const [aiFeedback, setAiFeedback] = useState<AiFeedbackType | null>(null);
-  const [activeTab, setActiveTab] = useState<'console' | 'report'>('console');
+  const [execOutput, setExecOutput] = useState<ExecutionOutput | null>(null);
 
-  React.useEffect(() => {
-    setCode(activeProblem.starterCode[language]);
-    setOutput('Click "Run Code" to view console output here.');
-    setAiFeedback(null);
-    setShowAiFeedback(false);
-    setActiveTab('console');
-  }, [activeProblem, language]);
+  // Dynamic step loading (when launched from a lesson lab step)
+  const [dbStep, setDbStep] = useState<any>(null);
+  const [loadingStep, setLoadingStep] = useState(false);
+  const [isStepMode, setIsStepMode] = useState(false);
 
-  const handleRun = () => {
+  const activeProblem = codingProblems.find((p) => p.id === selectedProblemId) ?? codingProblems[0];
+
+  // Load DB step if stepId is present in URL
+  useEffect(() => {
+    if (stepId) {
+      setIsStepMode(true);
+      setLoadingStep(true);
+      fetch(`/api/steps/${stepId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.step) {
+            const s = data.step;
+            setDbStep(s);
+            // Detect language from labLanguage field
+            const lang = (s.labLanguage as Language) || 'javascript';
+            setLanguage(lang);
+            setCode(s.labStarterCode || '');
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load step:', err);
+          toast.error('Failed to load lab step');
+        })
+        .finally(() => setLoadingStep(false));
+    }
+  }, [stepId]);
+
+  // Update code when problem or language changes (free-practice mode only)
+  useEffect(() => {
+    if (!isStepMode) {
+      setCode(activeProblem.starterCode[language]);
+      setExecOutput(null);
+      setAiFeedback(null);
+      setShowAiFeedback(false);
+      setActiveTab('console');
+    }
+  }, [activeProblem, language, isStepMode]);
+
+  const callCompileApi = async (isSubmit: boolean): Promise<ExecutionOutput | null> => {
+    try {
+      const body: Record<string, any> = { code, language, isSubmit };
+      if (isStepMode && stepId) {
+        body.stepId = stepId;
+      } else {
+        body.problemId = selectedProblemId;
+      }
+
+      const res = await fetch('/api/compile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Compilation failed');
+      return data as ExecutionOutput;
+    } catch (err: any) {
+      toast.error(err.message || 'Execution service error');
+      return null;
+    }
+  };
+
+  const handleRun = async () => {
     setIsRunning(true);
     setActiveTab('console');
-    setTimeout(() => {
-      setIsRunning(false);
-      setOutput(
-        `Running sandboxed environment...\nOutput:\n${activeProblem.sampleOutput}\nExecution Time: 4ms\nMemory Used: 12MB`
-      );
-    }, 1000);
+    setExecOutput(null);
+    const result = await callCompileApi(false);
+    setIsRunning(false);
+    if (result) setExecOutput(result);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     setActiveTab('report');
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setShowAiFeedback(true);
-      setAiFeedback(problemFeedback[activeProblem.id] ?? {
-        score: 80,
+    setExecOutput(null);
+    const result = await callCompileApi(true);
+    setIsSubmitting(false);
+    if (result) {
+      setExecOutput(result);
+      // Show AI feedback panel after submission
+      const feedback = problemFeedback[isStepMode ? (stepId ?? '') : selectedProblemId] ?? {
+        score: 82,
         metrics: { complexity: 'O(N) Time', performance: 'Good Runtime', style: 'Readable' },
-        suggestions: ['Great start! Refine your implementation by focusing on space and edge-case handling.'],
-        optimalExplanation: 'Review the problem constraints and choose the simplest correct approach for this problem.',
-        optimalCode: activeProblem.starterCode.javascript
-      });
-    }, 1500);
+        suggestions: ['Great work! Review edge cases and consider space optimizations.'],
+        optimalExplanation: 'Review the problem constraints and choose the simplest correct approach.',
+        optimalCode: code,
+      };
+      setAiFeedback(feedback);
+      setShowAiFeedback(true);
+
+      if (result.testResults?.passed) {
+        toast.success(`✅ All ${result.testResults.passedCount} tests passed!`);
+      } else if (result.testResults) {
+        toast.error(`❌ ${result.testResults.summary}`);
+      }
+    }
   };
 
-  const handleProblemSelect = (problemId: string) => {
-    setSelectedProblemId(problemId);
-  };
+  const consoleOutput = execOutput
+    ? [
+        execOutput.stdout ? `📤 Output:\n${execOutput.stdout}` : '',
+        execOutput.stderr ? `⚠️  Errors:\n${execOutput.stderr}` : '',
+        `⏱  Execution: ${execOutput.timeMs}ms`,
+        execOutput.usedDocker ? '🐳 Ran in Docker Sandbox' : '💻 Ran Locally (fallback)',
+        execOutput.isTimeout ? '⏰ TIMEOUT: Execution exceeded limit' : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n')
+    : 'Click "Run Code" to see console output here.';
+
+  // Compute Monaco language identifier
+  const monacoLang = language === 'cpp' ? 'cpp' : language;
+
+  if (loadingStep) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '3px solid var(--border-primary)', borderTop: '3px solid var(--accent-primary)', animation: 'spin 0.8s linear infinite' }} />
+        <p style={{ color: 'var(--text-secondary)' }}>Loading lab environment...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -461,239 +571,240 @@ export default function CodingLab() {
       {/* Left Pane: Problem Description */}
       <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', borderRadius: 0, borderTop: 'none', borderBottom: 'none' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px 16px 0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-            <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, margin: 0 }}>{activeProblem.title}</h2>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <Badge variant={activeProblem.difficulty === 'Easy' ? 'success' : 'warning'}>{activeProblem.difficulty}</Badge>
-              {activeProblem.tags.map((tag) => (
-                <Badge key={tag} variant="primary">{tag}</Badge>
-              ))}
-            </div>
-          </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-            {codingProblems.map((problem) => (
-              <button
-                key={problem.id}
-                onClick={() => setSelectedProblemId(problem.id)}
-                style={{
-                  padding: '10px 12px',
-                  borderRadius: '12px',
-                  border: problem.id === selectedProblemId ? '2px solid var(--accent-primary)' : '1px solid var(--border-primary)',
-                  background: problem.id === selectedProblemId ? 'var(--bg-secondary)' : 'transparent',
-                  color: problem.id === selectedProblemId ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  textAlign: 'left'
-                }}
-              >
-                {problem.title}
-              </button>
+          {/* Step mode: show step details from DB */}
+          {isStepMode && dbStep ? (
+            <div>
+              <span className="badge badge-primary" style={{ marginBottom: '8px', display: 'inline-block' }}>
+                💻 LESSON LAB
+              </span>
+              <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, margin: '0 0 8px 0' }}>
+                {dbStep.title}
+              </h2>
+              {dbStep.labInstructions && (
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                  {dbStep.labInstructions}
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                <h2 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, margin: 0 }}>{activeProblem.title}</h2>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <Badge variant={activeProblem.difficulty === 'Easy' ? 'success' : 'warning'}>{activeProblem.difficulty}</Badge>
+                  {activeProblem.tags.map((tag) => (
+                    <Badge key={tag} variant="primary">{tag}</Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Problem selector grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+                {codingProblems.map((problem) => (
+                  <button
+                    key={problem.id}
+                    onClick={() => setSelectedProblemId(problem.id)}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: problem.id === selectedProblemId ? '2px solid var(--accent-primary)' : '1px solid var(--border-primary)',
+                      background: problem.id === selectedProblemId ? 'var(--bg-secondary)' : 'transparent',
+                      color: problem.id === selectedProblemId ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: 'var(--font-size-xs)',
+                    }}
+                  >
+                    {problem.title}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Problem description & examples (free practice mode) */}
+        {!isStepMode && (
+          <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+              {activeProblem.description}
+            </p>
+            {activeProblem.examples.map((example, index) => (
+              <div key={index} style={{ background: 'var(--bg-tertiary)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)' }}>
+                <strong>Example {index + 1}:</strong>
+                <pre style={{ marginTop: '4px', color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+                  Input: {example.input}{'\n'}
+                  Output: {example.output}
+                </pre>
+              </div>
             ))}
           </div>
-        </div>
-
-        <div style={{ padding: '0 16px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            {activeProblem.description}
-          </p>
-          {activeProblem.examples.map((example, index) => (
-            <div key={index} style={{ background: 'var(--bg-tertiary)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)' }}>
-              <strong>Example {index + 1}:</strong>
-              <pre style={{ marginTop: '4px', color: 'var(--text-primary)' }}>
-                Input: {example.input}{"\n"}
-                Output: {example.output}
-              </pre>
-            </div>
-          ))}
-        </div>
+        )}
       </div>
-     
 
-      {/* Middle Pane: Code Editor & Bottom Tabbed Panel */}
+      {/* Middle Pane: Monaco Editor + Output */}
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 'var(--spacing-md)', overflow: 'hidden' }}>
-        {/* Editor Area */}
-        <div className="card" style={{ flex: '1 1 50%', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 0 }}>
+        {/* Editor Toolbar */}
+        <div className="card" style={{ flex: '1 1 55%', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 0 }}>
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '8px 16px',
-            background: 'var(--bg-tertiary)',
-            borderBottom: '1px solid var(--border-primary)'
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '8px 16px', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)'
           }}>
-            <select
-              className="input select"
-              value={language}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLanguage(e.target.value as Language)}
-              style={{ width: '150px', padding: '4px 8px' }}
-            >
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="cpp">C++</option>
-              <option value="java">Java</option>
-            </select>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <select
+                className="input select"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                style={{ width: '150px', padding: '4px 8px' }}
+                disabled={isStepMode}
+              >
+                <option value="javascript">JavaScript</option>
+                <option value="python">Python</option>
+                <option value="cpp">C++</option>
+                <option value="java">Java</option>
+              </select>
+              {isStepMode && (
+                <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', background: 'var(--bg-glass)', padding: '2px 8px', borderRadius: '99px', border: '1px solid var(--border-primary)' }}>
+                  📖 Lesson Lab
+                </span>
+              )}
+            </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>
               <Button variant="secondary" size="sm" onClick={handleRun} disabled={isRunning || isSubmitting}>
-                {isRunning ? 'Running...' : 'Run Code'}
+                {isRunning ? '⏳ Running...' : '▶ Run Code'}
               </Button>
               <Button variant="primary" size="sm" onClick={handleSubmit} disabled={isRunning || isSubmitting}>
-                {isSubmitting ? 'Submitting...' : 'Submit Code'}
+                {isSubmitting ? '⏳ Submitting...' : '🚀 Submit'}
               </Button>
             </div>
           </div>
 
-          <textarea
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            style={{
-              flex: 1,
-              background: '#070a13',
-              color: '#818cf8',
-              fontFamily: 'monospace',
-              fontSize: '14px',
-              padding: '16px',
-              resize: 'none',
-              lineHeight: 1.5,
-              border: 'none',
-              outline: 'none'
-            }}
-          />
+          {/* Monaco Editor */}
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <Editor
+              height="100%"
+              language={monacoLang}
+              value={code}
+              onChange={(val) => setCode(val ?? '')}
+              theme="vs-dark"
+              options={{
+                fontSize: 14,
+                fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                lineNumbers: 'on',
+                renderWhitespace: 'selection',
+                tabSize: 2,
+                wordWrap: 'on',
+                padding: { top: 16, bottom: 16 },
+                suggest: { showKeywords: true },
+                quickSuggestions: true,
+              }}
+            />
+          </div>
         </div>
 
-        {/* LeetCode-Style Output Workspace */}
-        <div className="card" style={{ flex: '1 1 45%', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 0 }}>
-          {/* Workspace Tabs Header */}
-          <div style={{
-            display: 'flex',
-            background: 'var(--bg-tertiary)',
-            borderBottom: '1px solid var(--border-primary)',
-            padding: '0 8px'
-          }}>
-            <button
-              onClick={() => setActiveTab('console')}
-              style={{
-                padding: '10px 16px',
-                fontSize: 'var(--font-size-xs)',
-                fontWeight: 600,
-                color: activeTab === 'console' ? 'var(--accent-primary-hover)' : 'var(--text-secondary)',
-                borderBottom: activeTab === 'console' ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                cursor: 'pointer',
-                background: 'transparent'
-              }}
-            >
-              Console Output
-            </button>
-            <button
-              onClick={() => setActiveTab('report')}
-              style={{
-                padding: '10px 16px',
-                fontSize: 'var(--font-size-xs)',
-                fontWeight: 600,
-                color: activeTab === 'report' ? 'var(--accent-primary-hover)' : 'var(--text-secondary)',
-                borderBottom: activeTab === 'report' ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                cursor: 'pointer',
-                background: 'transparent',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              Submission Report
-              {aiFeedback && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--success)' }} />}
-            </button>
+        {/* Output / Submission Report Pane */}
+        <div className="card" style={{ flex: '1 1 40%', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: 0 }}>
+          {/* Tabs */}
+          <div style={{ display: 'flex', background: 'var(--bg-tertiary)', borderBottom: '1px solid var(--border-primary)', padding: '0 8px' }}>
+            {(['console', 'report'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '10px 16px', fontSize: 'var(--font-size-xs)', fontWeight: 600,
+                  color: activeTab === tab ? 'var(--accent-primary-hover)' : 'var(--text-secondary)',
+                  borderBottom: activeTab === tab ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                  cursor: 'pointer', background: 'transparent', display: 'flex', alignItems: 'center', gap: '6px',
+                }}
+              >
+                {tab === 'console' ? '📟 Console Output' : '📊 Submission Report'}
+                {tab === 'report' && execOutput?.testResults && (
+                  <span style={{
+                    width: '7px', height: '7px', borderRadius: '50%',
+                    background: execOutput.testResults.passed ? 'var(--success)' : 'var(--danger)',
+                  }} />
+                )}
+              </button>
+            ))}
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', background: '#070a13', padding: '16px' }}>
             {activeTab === 'console' ? (
-              <pre style={{
-                margin: 0,
-                color: 'var(--text-secondary)',
-                fontFamily: 'monospace',
-                fontSize: '13px',
-                whiteSpace: 'pre-wrap'
-              }}>
-                {output}
+              <pre style={{ margin: 0, color: '#94a3b8', fontFamily: 'monospace', fontSize: '13px', whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                {consoleOutput}
               </pre>
             ) : (
               <div>
-                {!aiFeedback && !isSubmitting && (
+                {!execOutput && !isSubmitting && (
                   <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)' }}>
-                    <p style={{ fontSize: 'var(--font-size-sm)' }}>No submission data yet.</p>
-                    <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '4px' }}>Click &quot;Submit Code&quot; to run the evaluation and generate your AI optimization report.</p>
+                    <p style={{ fontSize: 'var(--font-size-sm)' }}>No submission yet.</p>
+                    <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                      Click <strong>Submit</strong> to run tests and get your AI optimization report.
+                    </p>
                   </div>
                 )}
-
                 {isSubmitting && (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px', padding: '2rem 0' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', padding: '2rem 0' }}>
                     <span style={{ fontSize: '1.5rem', animation: 'float 2s infinite' }}>🤖</span>
-                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>Running tests and generating AI Optimization Guidance...</span>
+                    <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+                      Running test cases and generating AI review...
+                    </span>
                   </div>
                 )}
+                {execOutput && !isSubmitting && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* Test Results Banner */}
+                    {execOutput.testResults && (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '12px',
+                        padding: '12px 16px', borderRadius: 'var(--radius-md)',
+                        background: execOutput.testResults.passed ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                        border: `1px solid ${execOutput.testResults.passed ? 'var(--success)' : 'var(--danger)'}`,
+                      }}>
+                        <span style={{ fontSize: '1.5rem' }}>{execOutput.testResults.passed ? '✅' : '❌'}</span>
+                        <div>
+                          <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 800, color: execOutput.testResults.passed ? 'var(--success)' : 'var(--danger)' }}>
+                            {execOutput.testResults.passed ? 'Accepted' : 'Wrong Answer'}
+                          </div>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>
+                            {execOutput.testResults.summary}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
-                {aiFeedback && !isSubmitting && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn var(--transition-base)' }}>
-                    {/* LeetCode Header metrics */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-primary)', paddingBottom: '12px' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ color: 'var(--success)', fontWeight: 800, fontSize: '1.25rem' }}>Accepted</span>
-                          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>passed 25/25 test cases</span>
+                    {/* Performance Stats */}
+                    <div style={{ display: 'flex', gap: '24px' }}>
+                      {[
+                        { label: 'Runtime', value: `${execOutput.timeMs}ms` },
+                        { label: 'Execution', value: execOutput.usedDocker ? '🐳 Docker' : '💻 Local' },
+                        { label: 'Exit Code', value: String(execOutput.exitCode) },
+                      ].map(({ label, value }) => (
+                        <div key={label}>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>{label}</div>
+                          <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)' }}>{value}</div>
                         </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '24px' }}>
-                        <div>
-                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>Runtime</div>
-                          <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)' }}>4 ms</div>
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)' }}>Memory</div>
-                          <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, color: 'var(--text-primary)' }}>12.4 MB</div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
 
-                    {/* Comparative Runtime & Memory Distribution Bar Charts */}
-                    <div>
-                      <h4 style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '8px' }}>Performance Benchmarking</h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                            <span>Runtime beats 95.8% of JavaScript submissions</span>
-                            <span style={{ fontWeight: 600, color: 'var(--success)' }}>Excellent</span>
-                          </div>
-                          <div style={{ height: '8px', background: 'var(--bg-glass)', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: '95.8%', height: '100%', background: 'linear-gradient(90deg, var(--accent-primary) 0%, var(--success) 100%)' }} />
-                          </div>
+                    {/* AI Feedback preview */}
+                    {aiFeedback && (
+                      <div style={{ borderTop: '1px solid var(--border-primary)', paddingTop: '12px' }}>
+                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '6px' }}>
+                          🤖 AI Optimization Score
+                        </p>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--success)' }}>
+                          {aiFeedback.score}/100
                         </div>
-                        <div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                            <span>Memory beats 34.2% of JavaScript submissions</span>
-                            <span style={{ fontWeight: 600, color: 'var(--warning)' }}>Needs Space Optimization</span>
-                          </div>
-                          <div style={{ height: '8px', background: 'var(--bg-glass)', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: '34.2%', height: '100%', background: 'linear-gradient(90deg, var(--accent-primary) 0%, var(--warning) 100%)' }} />
-                          </div>
-                        </div>
+                        <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                          See full analysis in the right panel →
+                        </p>
                       </div>
-                    </div>
-
-                    {/* Optimization Walkthrough Section */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <h4 style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>AI Space Optimization Guide</h4>
-                      <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                        {aiFeedback.optimalExplanation}
-                      </p>
-                      <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)', padding: '12px', marginTop: '8px' }}>
-                        <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', borderBottom: '1px solid var(--border-primary)', paddingBottom: '6px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Optimal O(1) Space Implementation</span>
-                          <span style={{ color: 'var(--success)' }}>Space: O(1) • Time: O(N)</span>
-                        </div>
-                        <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '12px', color: '#a78bfa', overflowX: 'auto' }}>
-                          {aiFeedback.optimalCode}
-                        </pre>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -702,70 +813,77 @@ export default function CodingLab() {
         </div>
       </div>
 
-      {/* Right Pane: Collapsible AI Feedback Summary */}
+      {/* Right Pane: AI Feedback */}
       {showAiFeedback && aiFeedback && (
         <div className="card" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', borderRadius: 0, borderTop: 'none', borderBottom: 'none', animation: 'slideInLeft 0.3s ease' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700 }}>🤖 Optimization Feedback</h3>
-            <button
-              onClick={() => setShowAiFeedback(false)}
-              style={{ background: 'transparent', color: 'var(--text-tertiary)', fontSize: '1.25rem' }}
-            >
-              ×
-            </button>
+            <h3 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700 }}>🤖 AI Feedback</h3>
+            <button onClick={() => setShowAiFeedback(false)} style={{ background: 'transparent', color: 'var(--text-tertiary)', fontSize: '1.25rem', border: 'none', cursor: 'pointer' }}>×</button>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-tertiary)', padding: '12px', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
             <span style={{ fontSize: '2rem' }}>🎯</span>
             <div>
-              <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: 'var(--success)' }}>
-                {aiFeedback.score}/100
-              </div>
+              <div style={{ fontSize: 'var(--font-size-lg)', fontWeight: 800, color: 'var(--success)' }}>{aiFeedback.score}/100</div>
               <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)' }}>Optimization Score</div>
             </div>
           </div>
 
           <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' }}>Metrics Overview</h4>
+            <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '8px' }}>Metrics</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: 'var(--font-size-xs)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Complexity:</span>
-                <span style={{ fontWeight: 600, color: 'var(--accent-primary-hover)' }}>{aiFeedback.metrics.complexity}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Performance:</span>
-                <span style={{ fontWeight: 600, color: 'var(--success)' }}>{aiFeedback.metrics.performance}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>Style & Quality:</span>
-                <span style={{ fontWeight: 600, color: 'var(--warning)' }}>{aiFeedback.metrics.style}</span>
-              </div>
+              {Object.entries(aiFeedback.metrics).map(([k, v]) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{k}:</span>
+                  <span style={{ fontWeight: 600, color: 'var(--accent-primary-hover)' }}>{v}</span>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div>
-            <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '8px', color: 'var(--text-primary)' }}>Detailed Suggestions</h4>
-            <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: 0 }}>
-              {aiFeedback.suggestions.map((sug: string, idx: number) => (
-                <li
-                  key={idx}
-                  style={{
-                    fontSize: 'var(--font-size-xs)',
-                    color: 'var(--text-secondary)',
-                    padding: '8px',
-                    background: 'var(--bg-glass)',
-                    borderRadius: 'var(--radius-sm)',
-                    borderLeft: '3px solid var(--accent-primary)',
-                    lineHeight: 1.4
-                  }}
-                >
-                  {sug}
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '8px' }}>Suggestions</h4>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: 0, listStyle: 'none' }}>
+              {aiFeedback.suggestions.map((s, i) => (
+                <li key={i} style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', padding: '8px', background: 'var(--bg-glass)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--accent-primary)', lineHeight: 1.5 }}>
+                  {s}
                 </li>
               ))}
             </ul>
           </div>
+
+          {aiFeedback.optimalExplanation && (
+            <div>
+              <h4 style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: '6px' }}>Optimal Approach</h4>
+              <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px' }}>
+                {aiFeedback.optimalExplanation}
+              </p>
+              {aiFeedback.optimalCode && (
+                <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginBottom: '6px' }}>Optimal Implementation</div>
+                  <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '11px', color: '#a78bfa', overflowX: 'auto', whiteSpace: 'pre-wrap' }}>
+                    {aiFeedback.optimalCode}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+
+export default function CodingLab() {
+  return (
+    <Suspense fallback={
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ width: '36px', height: '36px', borderRadius: '50%', border: '3px solid var(--border-primary)', borderTop: '3px solid var(--accent-primary)', animation: 'spin 0.8s linear infinite' }} />
+        <p style={{ color: 'var(--text-secondary)' }}>Initializing editor...</p>
+      </div>
+    }>
+      <CodingLabInner />
+    </Suspense>
+  );
+}
+

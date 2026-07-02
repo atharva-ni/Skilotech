@@ -19,7 +19,6 @@ const navConfig: Record<UserRole, NavItem[]> = {
     { label: 'Courses', href: '/dashboard/courses', icon: '📚' },
     { label: 'My Learning', href: '/dashboard/my-learning', icon: '🎯' },
     { label: 'Coding Lab', href: '/dashboard/coding-lab', icon: '💻' },
-    { label: 'GitHub Sync', href: '/dashboard/github-sync', icon: '🔗' },
     { label: 'Jobs', href: '/dashboard/jobs', icon: '💼' },
     { label: 'Community', href: '/dashboard/community', icon: '💬' },
   ],

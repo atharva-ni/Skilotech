@@ -6,6 +6,11 @@ export interface User {
   email: string;
   role: UserRole;
   avatar: string;
+  phone?: string;
+  firstName?: string;
+  lastName?: string;
+  bio?: string;
+  isVerified?: boolean;
 }
 
 export interface Course {
