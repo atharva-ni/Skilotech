@@ -232,6 +232,7 @@ When you enter \`https://skillbridge.com/courses\` in your browser:
         textContent: 'Watch this 4-minute overview of modern client-server structures and how databases interact with backend services.',
       },
       {
+        id: 'step_web_1_1_4',
         lessonId: l1_1.id,
         stepType: LessonStepType.lab,
         sortOrder: 4,
@@ -271,6 +272,19 @@ Fill in the template code functions to demonstrate your understanding:
 Click **Run Code** to compile and test, and then submit to verify!`,
       },
     ],
+  });
+
+  // Create matching Assignment to satisfy foreign key for submissions
+  await prisma.assignment.create({
+    data: {
+      id: 'step_web_1_1_4',
+      courseId: course1.id,
+      moduleId: m1.id,
+      title: 'Step 4: Interactive Architecture Quiz',
+      assignmentType: 'coding',
+      status: 'active',
+      maxScore: 100,
+    }
   });
 
   // Steps for Lesson 1.2
@@ -315,6 +329,7 @@ app.listen(3000, () => {
         `,
       },
       {
+        id: 'step_web_1_2_3',
         lessonId: l1_2.id,
         stepType: LessonStepType.lab,
         sortOrder: 3,
@@ -355,6 +370,19 @@ Complete the \`createExpressApp\` function:
 3. Return the configured \`app\` instance.`,
       },
     ],
+  });
+
+  // Create matching Assignment to satisfy foreign key for submissions
+  await prisma.assignment.create({
+    data: {
+      id: 'step_web_1_2_3',
+      courseId: course1.id,
+      moduleId: m1.id,
+      title: 'Step 3: Lab — Creating your first GET endpoint',
+      assignmentType: 'coding',
+      status: 'active',
+      maxScore: 100,
+    }
   });
 
   // Course 2: DSA in Python
@@ -433,6 +461,7 @@ For an array of 1 million items, Linear Search takes up to 1,000,000 operations,
         `,
       },
       {
+        id: 'step_dsa_1_1_2',
         lessonId: course2_l1.id,
         stepType: LessonStepType.lab,
         sortOrder: 3,
@@ -467,6 +496,19 @@ Implement the \`binary_search\` function in Python:
 3. Return the 0-indexed position of \`target\`, or \`-1\` if not found.`,
       },
     ],
+  });
+
+  // Create matching Assignment to satisfy foreign key for submissions
+  await prisma.assignment.create({
+    data: {
+      id: 'step_dsa_1_1_2',
+      courseId: course2.id,
+      moduleId: course2_m1.id,
+      title: 'Step 3: Lab — Implementing Binary Search',
+      assignmentType: 'coding',
+      status: 'active',
+      maxScore: 100,
+    }
   });
 
   // Seed Enrollments & Payments

@@ -263,6 +263,7 @@ model LessonStep {
   labStarterCode  String?        @map("lab_starter_code")
   labSolutionCode String?        @map("lab_solution_code")
   labInstructions String?        @map("lab_instructions")
+  labTestCode     Json?          @map("lab_test_code")
 
   metadata        Json           @default("{}")
   createdAt       DateTime       @default(now()) @map("created_at")
@@ -610,4 +611,30 @@ model CourseReview {
   @@index([courseId])
   @@index([userId])
   @@map("course_reviews")
+}
+
+enum ProblemDifficulty {
+  easy
+  medium
+  hard
+}
+
+model CodingProblem {
+  id           String            @id @default(uuid())
+  slug         String            @unique
+  title        String
+  difficulty   ProblemDifficulty
+  tags         Json              @default("[]")
+  description  String
+  starterCode  Json              @map("starter_code")
+  testCode     Json              @map("test_code")
+  aiFeedback   Json              @default("{}") @map("ai_feedback")
+  examples     Json              @default("[]")
+  sampleOutput String?           @map("sample_output")
+  sortOrder    Int               @default(0) @map("sort_order")
+  isActive     Boolean           @default(true) @map("is_active")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  @@map("coding_problems")
 }

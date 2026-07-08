@@ -12,173 +12,6 @@ const compileRequestSchema = z.object({
   isSubmit: z.boolean().optional().default(false),
 });
 
-// Define target test cases for each problem
-const PROBLEM_TESTS: Record<string, {
-  javascript: string;
-  python: string;
-  cpp: string;
-  java: string;
-}> = {
-  reverse: {
-    javascript: `
-// Assertions
-try {
-  if (typeof reverseString !== 'function') throw new Error("Function reverseString is not defined");
-  const test1 = reverseString("hello");
-  if (test1 !== "olleh") throw new Error("Expected 'olleh', but got '" + test1 + "'");
-  const test2 = reverseString("Skillzy");
-  if (test2 !== "yzllikS") throw new Error("Expected 'yzllikS', but got '" + test2 + "'");
-  console.log("TEST_RESULTS: 2/2 passed");
-} catch (err) {
-  console.error("TEST_FAILURE: " + err.message);
-  process.exit(1);
-}
-`,
-    python: `
-# Assertions
-try:
-    if 'reverse_string' not in globals() and 'reverseString' not in globals():
-        raise NameError("Function reverse_string or reverseString is not defined")
-    func = reverse_string if 'reverse_string' in globals() else reverseString
-    test1 = func("hello")
-    if test1 != "olleh":
-        raise ValueError(f"Expected 'olleh', but got '{test1}'")
-    test2 = func("Skillzy")
-    if test2 != "yzllikS":
-        raise ValueError(f"Expected 'yzllikS', but got '{test2}'")
-    print("TEST_RESULTS: 2/2 passed")
-except Exception as err:
-    import sys
-    print(f"TEST_FAILURE: {err}", file=sys.stderr)
-    sys.exit(1)
-`,
-    cpp: '',
-    java: '',
-  },
-  palindrome: {
-    javascript: `
-try {
-  if (typeof isPalindrome !== 'function') throw new Error("Function isPalindrome is not defined");
-  if (isPalindrome("Racecar") !== true) throw new Error("Expected true for 'Racecar'");
-  if (isPalindrome("hello") !== false) throw new Error("Expected false for 'hello'");
-  console.log("TEST_RESULTS: 2/2 passed");
-} catch (err) {
-  console.error("TEST_FAILURE: " + err.message);
-  process.exit(1);
-}
-`,
-    python: `
-try:
-    if 'is_palindrome' not in globals() and 'isPalindrome' not in globals():
-        raise NameError("Function is_palindrome or isPalindrome is not defined")
-    func = is_palindrome if 'is_palindrome' in globals() else isPalindrome
-    if func("Racecar") != True:
-        raise ValueError("Expected True for 'Racecar'")
-    if func("hello") != False:
-        raise ValueError("Expected False for 'hello'")
-    print("TEST_RESULTS: 2/2 passed")
-except Exception as err:
-    import sys
-    print(f"TEST_FAILURE: {err}", file=sys.stderr)
-    sys.exit(1)
-`,
-    cpp: '',
-    java: '',
-  },
-  fizzbuzz: {
-    javascript: `
-try {
-  if (typeof fizzBuzz !== 'function') throw new Error("Function fizzBuzz is not defined");
-  console.log("TEST_RESULTS: 1/1 passed");
-} catch (err) {
-  console.error("TEST_FAILURE: " + err.message);
-  process.exit(1);
-}
-`,
-    python: `
-try:
-    if 'fizz_buzz' not in globals() and 'fizzBuzz' not in globals():
-        raise NameError("Function fizz_buzz or fizzBuzz is not defined")
-    print("TEST_RESULTS: 1/1 passed")
-except Exception as err:
-    import sys
-    print(f"TEST_FAILURE: {err}", file=sys.stderr)
-    sys.exit(1)
-`,
-    cpp: '',
-    java: '',
-  },
-  'two-sum': {
-    javascript: `
-try {
-  if (typeof twoSum !== 'function') throw new Error("Function twoSum is not defined");
-  const res = twoSum([2, 7, 11, 15], 9);
-  if (!res || res[0] !== 0 || res[1] !== 1) throw new Error("Expected [0, 1] for twoSum([2,7,11,15], 9)");
-  console.log("TEST_RESULTS: 1/1 passed");
-} catch (err) {
-  console.error("TEST_FAILURE: " + err.message);
-  process.exit(1);
-}
-`,
-    python: `
-try:
-    if 'two_sum' not in globals() and 'twoSum' not in globals():
-        raise NameError("Function two_sum or twoSum is not defined")
-    func = two_sum if 'two_sum' in globals() else twoSum
-    res = func([2, 7, 11, 15], 9)
-    if not res or res[0] != 0 or res[1] != 1:
-        raise ValueError("Expected [0, 1] for twoSum([2,7,11,15], 9)")
-    print("TEST_RESULTS: 1/1 passed")
-except Exception as err:
-    import sys
-    print(f"TEST_FAILURE: {err}", file=sys.stderr)
-    sys.exit(1)
-`,
-    cpp: '',
-    java: '',
-  },
-};
-
-// Dynamic test runner for DB LessonStep labs
-const STEP_TESTS: Record<string, {
-  javascript: string;
-  python: string;
-}> = {
-  step_web_1_1_4: {
-    javascript: `
-try {
-  const { getClientRole, getHTTPMethodForCreation } = module.exports;
-  if (typeof getClientRole !== 'function') throw new Error("getClientRole is not exported");
-  if (typeof getHTTPMethodForCreation !== 'function') throw new Error("getHTTPMethodForCreation is not exported");
-  if (getClientRole() !== "render_ui") throw new Error("getClientRole() must return 'render_ui'");
-  if (getHTTPMethodForCreation() !== "POST") throw new Error("getHTTPMethodForCreation() must return 'POST'");
-  console.log("TEST_RESULTS: 2/2 passed");
-} catch (err) {
-  console.error("TEST_FAILURE: " + err.message);
-  process.exit(1);
-}
-`,
-    python: ''
-  },
-  step_dsa_1_1_2: {
-    javascript: '',
-    python: `
-try:
-    if 'binary_search' not in globals():
-        raise NameError("Function binary_search is not defined")
-    if binary_search([1, 2, 3, 4, 5], 3) != 2:
-        raise ValueError("Failed test 1: target 3 in [1,2,3,4,5]")
-    if binary_search([1, 2, 3, 4, 5], 6) != -1:
-        raise ValueError("Failed test 2: target 6 not in [1,2,3,4,5]")
-    print("TEST_RESULTS: 2/2 passed")
-except Exception as err:
-    import sys
-    print(f"TEST_FAILURE: {err}", file=sys.stderr)
-    sys.exit(1)
-`
-  }
-};
-
 export async function POST(req: NextRequest) {
   try {
     const dbUser = await requireAuth();
@@ -194,33 +27,84 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Append test assertions if this is a submission run
+    // Fetch problem if problemId is provided
+    let dbProblem = null;
+    if (problemId) {
+      dbProblem = await prisma.codingProblem.findFirst({
+        where: {
+          OR: [
+            { id: problemId },
+            { slug: problemId }
+          ]
+        }
+      });
+    }
+
+    // 2. Append test assertions (run for both Run Code and Submit)
     let codeToExecute = code;
     let isTestRun = false;
 
-    if (isSubmit) {
+    let assertionCode: string | null = null;
+    if (stepId && dbStep?.labTestCode) {
+      const stepTests = dbStep.labTestCode as Record<string, string>;
+      assertionCode = stepTests[language] || null;
+    } else if (problemId && dbProblem?.testCode) {
+      const problemTests = dbProblem.testCode as Record<string, string>;
+      assertionCode = problemTests[language] || null;
+    }
+
+    if (assertionCode) {
+      codeToExecute += '\n' + assertionCode;
       isTestRun = true;
-      // Fetch assertions for the step or problem
-      const tests = stepId ? STEP_TESTS[stepId] : (problemId ? PROBLEM_TESTS[problemId] : null);
-      if (tests) {
-        const assertionCode = tests[language as 'javascript' | 'python'];
-        if (assertionCode) {
-          codeToExecute += '\n' + assertionCode;
-        }
-      }
     }
 
     // 3. Run the code via sandbox compiler
-    const runResult = await executeCode(codeToExecute, language);
+    const runResult = await executeCode(codeToExecute, language, dbUser.id);
 
-    // 4. Parse test output if this was a submission run
+    // 4. Parse test output & extract individual test cases from stdout
+    let cleanedStdout = '';
+    const parsedTestCases: { index: number; passed: boolean; actual: string }[] = [];
+    
+    if (runResult.stdout) {
+      const lines = runResult.stdout.split('\n');
+      const regularLines: string[] = [];
+      
+      lines.forEach(line => {
+        if (line.startsWith('[TEST_CASE]')) {
+          const content = line.substring(11).trim(); // remove '[TEST_CASE]'
+          if (content.startsWith('ERROR')) {
+            return;
+          }
+          const parts = content.split(' | ');
+          const index = parseInt(parts[0].trim(), 10);
+          const passed = parts[1]?.trim() === 'PASS';
+          const actual = parts[2]?.replace('Actual:', '').trim() || '';
+          
+          parsedTestCases.push({ index, passed, actual });
+        } else if (line.startsWith('TEST_RESULTS:') || line.startsWith('TEST_FAILURE:')) {
+          // Filter out internal test result markers
+          return;
+        } else {
+          regularLines.push(line);
+        }
+      });
+      cleanedStdout = regularLines.join('\n').trim();
+    } else {
+      cleanedStdout = runResult.stdout || '';
+    }
+
     let testPassed = false;
     let testSummary = 'Executed successfully';
     let passedCount = 0;
     let totalCount = 0;
 
     if (isTestRun) {
-      if (runResult.exitCode === 0 && runResult.stdout.includes('TEST_RESULTS:')) {
+      if (parsedTestCases.length > 0) {
+        passedCount = parsedTestCases.filter(tc => tc.passed).length;
+        totalCount = parsedTestCases.length;
+        testPassed = passedCount === totalCount;
+        testSummary = `${passedCount}/${totalCount} tests passed`;
+      } else if (runResult.exitCode === 0 && runResult.stdout.includes('TEST_RESULTS:')) {
         testPassed = true;
         const match = runResult.stdout.match(/TEST_RESULTS:\s*(\d+)\/(\d+)\s*passed/);
         if (match) {
@@ -342,18 +226,21 @@ export async function POST(req: NextRequest) {
     }
 
     return apiSuccess({
-      stdout: runResult.stdout,
+      stdout: cleanedStdout,
       stderr: runResult.stderr,
       exitCode: runResult.exitCode,
       timeMs: runResult.timeMs,
-      usedDocker: runResult.usedDocker,
       isTimeout: runResult.isTimeout,
+      memory: runResult.memory,
+      cpuTime: runResult.cpuTime,
+      wallTime: runResult.wallTime,
       testResults: isTestRun ? {
         passed: testPassed,
         summary: testSummary,
         passedCount,
         totalCount
-      } : null
+      } : null,
+      testCases: parsedTestCases.length > 0 ? parsedTestCases : null
     });
   } catch (error: any) {
     console.error('Compiler Route error:', error);
