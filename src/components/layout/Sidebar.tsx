@@ -91,13 +91,13 @@ export default function Sidebar() {
       {/* Brand header — logo only */}
       <div className={styles.brand} style={{
         borderBottom: '1px solid #e5e5e5',
-        justifyContent: collapsed ? 'center' : 'flex-start',
+        justifyContent: 'center',
       }}>
         <Link href={dashboardHome} className={styles.logo} style={{
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'flex-start',
+          justifyContent: 'center',
           width: '100%',
         }}>
           <AnimatePresence mode="wait" initial={false}>
