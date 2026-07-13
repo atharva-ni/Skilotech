@@ -118,7 +118,7 @@ export default function LandingPage() {
         <div className={styles.navInner}>
           <Link href="/" className={styles.brand}>
             <span className={styles.brandIcon} style={{ fontWeight: 800 }}>⚡</span>
-            <span className={styles.brandText} style={{ fontWeight: 800, color: '#171717' }}>Skillzy</span>
+            <span className={styles.brandText} style={{ fontWeight: 800, color: '#171717' }}>Skilotech</span>
           </Link>
           <div className={styles.navLinks}>
             <a href="#features" className={styles.navLink}>Features</a>
@@ -198,7 +198,7 @@ export default function LandingPage() {
               <span className={styles.heroGradient} style={{ color: '#171717' }}>Succeed</span>
             </h2>
             <p className={styles.sectionSubtitle} style={{ color: 'var(--text-secondary)', marginTop: '12px', fontSize: '0.95rem' }}>
-              From learning to placement — Skillzy has got you covered with a complete career toolkit.
+              From learning to placement — Skilotech has got you covered with a complete career toolkit.
             </p>
           </motion.div>
 
@@ -277,7 +277,7 @@ export default function LandingPage() {
               Join thousands of learners who are building the skills employers want. Start with free courses today.
             </p>
             <Link href="/sign-up" className="btn btn-primary btn-lg" style={{ borderRadius: 'var(--radius-md)' }}>
-              Join Skillzy Now →
+              Join Skilotech Now →
             </Link>
           </motion.div>
         </div>
@@ -288,10 +288,10 @@ export default function LandingPage() {
         <div className={styles.footerInner}>
           <div className={styles.footerBrand}>
             <span className={styles.brandIcon} style={{ fontWeight: 800 }}>⚡</span>
-            <span className={styles.brandText} style={{ fontWeight: 800, color: '#171717' }}>Skillzy</span>
+            <span className={styles.brandText} style={{ fontWeight: 800, color: '#171717' }}>Skilotech</span>
           </div>
           <p className={styles.footerText} style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
-            © 2026 Skillzy. All rights reserved. Built for learners, by learners.
+            © 2026 Skilotech. All rights reserved. Built for learners, by learners.
           </p>
         </div>
       </footer>

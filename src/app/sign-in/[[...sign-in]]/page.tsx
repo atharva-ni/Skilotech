@@ -17,7 +17,7 @@ export default function SignInPage() {
         {/* Branding */}
         <div className="auth-brand">
           <div className="auth-brand-icon">⚡</div>
-          <span className="auth-brand-text">Skillzy</span>
+          <span className="auth-brand-text">Skilotech</span>
         </div>
 
         <p className="auth-tagline">Welcome back — pick up where you left off.</p>

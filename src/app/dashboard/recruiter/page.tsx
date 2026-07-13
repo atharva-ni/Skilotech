@@ -60,7 +60,7 @@ export default function RecruiterDashboard() {
     <div className="page-container">
       <div className="page-header">
         <h1 className="page-title">🏢 Recruiter Hub</h1>
-        <p className="page-subtitle">Welcome back, {user?.name}. Source top technical developers from Skillzy.</p>
+        <p className="page-subtitle">Welcome back, {user?.name}. Source top technical developers from Skilotech.</p>
       </div>
 
       {loading ? (

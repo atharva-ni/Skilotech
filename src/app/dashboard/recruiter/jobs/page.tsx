@@ -156,7 +156,7 @@ export default function RecruiterJobs() {
         <div className="card" style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
           <Briefcase size={40} style={{ margin: '0 auto 16px', color: 'var(--text-tertiary)' }} />
           <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>No job postings yet</h3>
-          <p>Create your first job posting to start receiving applications from Skillzy learners.</p>
+          <p>Create your first job posting to start receiving applications from Skilotech learners.</p>
         </div>
       ) : (
         <div className="grid-3 animate-fade-in-up">

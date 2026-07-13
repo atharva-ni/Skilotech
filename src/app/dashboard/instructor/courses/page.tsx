@@ -184,7 +184,7 @@ export default function InstructorCourses() {
         <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📚</div>
           <h3 style={{ marginBottom: '8px', color: 'var(--text-primary)' }}>No courses yet</h3>
-          <p style={{ marginBottom: '16px' }}>Create your first course to start teaching on Skillzy.</p>
+          <p style={{ marginBottom: '16px' }}>Create your first course to start teaching on Skilotech.</p>
           {!showCreateForm && (
             <Button onClick={() => setShowCreateForm(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
               <Plus size={16} /> Create Your First Course

@@ -15,7 +15,7 @@ async function main() {
       description: 'Write a function reverseString(str) that takes a string as input and returns the string reversed.',
       examples: [
         { input: '"hello"', output: '"olleh"', explanation: 'The characters of "hello" reversed give "olleh".' },
-        { input: '"Skillzy"', output: '"yzllikS"', explanation: 'Case is preserved when reversing.' }
+        { input: '"Skilotech"', output: '"hcetolikS"', explanation: 'Case is preserved when reversing.' }
       ],
       constraints: [
         '1 <= str.length <= 10^5',
@@ -35,7 +35,7 @@ try {
   if (typeof reverseString !== 'function') throw new Error("Function reverseString is not defined");
   const cases = [
     { input: "hello", expected: "olleh" },
-    { input: "Skillzy", expected: "yzllikS" }
+    { input: "Skilotech", expected: "hcetolikS" }
   ];
   let passedCount = 0;
   cases.forEach((c, idx) => {
@@ -62,7 +62,7 @@ try:
     func = reverse_string if 'reverse_string' in globals() else reverseString
     cases = [
         { "input": "hello", "expected": "olleh" },
-        { "input": "Skillzy", "expected": "yzllikS" }
+        { "input": "Skilotech", "expected": "hcetolikS" }
     ]
     passed_count = 0
     for idx, c in enumerate(cases):
@@ -82,8 +82,8 @@ except Exception as err:
     print(f"TEST_FAILURE: {err}", file=sys.stderr)
     sys.exit(1)
 `,
-        cpp: `int main() {\n    struct TestCase { std::string input; std::string expected; };\n    std::vector<TestCase> cases = {\n        { "hello", "olleh" },\n        { "Skillzy", "yzllikS" }\n    };\n    int passedCount = 0;\n    for (int i = 0; i < cases.size(); i++) {\n        std::string act = reverseString(cases[i].input);\n        bool passed = act == cases[i].expected;\n        if (passed) passedCount++;\n        std::cout << "[TEST_CASE] " << i << " | " << (passed ? "PASS" : "FAIL") << " | Actual: \"" << act << "\"\n";\n    }\n    if (passedCount == cases.size()) std::cout << "TEST_RESULTS: " << passedCount << "/" << cases.size() << " passed\n";\n    else std::cout << "TEST_FAILURE: " << (cases.size() - passedCount) << " test cases failed\n";\n    return 0;\n}`,
-        java: `public class Main {\n    public static void main(String[] args) {\n        String[] inputs = { "hello", "Skillzy" };\n        String[] expecteds = { "olleh", "yzllikS" };\n        int passedCount = 0;\n        for (int i = 0; i < inputs.length; i++) {\n            try {\n                String act = StudentSolution.reverseString(inputs[i]);\n                boolean passed = act != null && act.equals(expecteds[i]);\n                if (passed) passedCount++;\n                System.out.println("[TEST_CASE] " + i + " | " + (passed ? "PASS" : "FAIL") + " | Actual: \"" + act + "\"");\n            } catch (Exception e) {\n                System.out.println("[TEST_CASE] " + i + " | FAIL | Actual: Error: " + e.getMessage());\n            }\n        }\n        if (passedCount == inputs.length) System.out.println("TEST_RESULTS: " + passedCount + "/" + inputs.length + " passed");\n        else System.out.println("TEST_FAILURE: " + (inputs.length - passedCount) + " test cases failed");\n    }\n}`
+        cpp: `int main() {\n    struct TestCase { std::string input; std::string expected; };\n    std::vector<TestCase> cases = {\n        { "hello", "olleh" },\n        { "Skilotech", "hcetolikS" }\n    };\n    int passedCount = 0;\n    for (int i = 0; i < cases.size(); i++) {\n        std::string act = reverseString(cases[i].input);\n        bool passed = act == cases[i].expected;\n        if (passed) passedCount++;\n        std::cout << "[TEST_CASE] " << i << " | " << (passed ? "PASS" : "FAIL") << " | Actual: \"" << act << "\"\n";\n    }\n    if (passedCount == cases.size()) std::cout << "TEST_RESULTS: " << passedCount << "/" << cases.size() << " passed\n";\n    else std::cout << "TEST_FAILURE: " << (cases.size() - passedCount) << " test cases failed\n";\n    return 0;\n}`,
+        java: `public class Main {\n    public static void main(String[] args) {\n        String[] inputs = { "hello", "Skilotech" };\n        String[] expecteds = { "olleh", "hcetolikS" };\n        int passedCount = 0;\n        for (int i = 0; i < inputs.length; i++) {\n            try {\n                String act = StudentSolution.reverseString(inputs[i]);\n                boolean passed = act != null && act.equals(expecteds[i]);\n                if (passed) passedCount++;\n                System.out.println("[TEST_CASE] " + i + " | " + (passed ? "PASS" : "FAIL") + " | Actual: \"" + act + "\"");\n            } catch (Exception e) {\n                System.out.println("[TEST_CASE] " + i + " | FAIL | Actual: Error: " + e.getMessage());\n            }\n        }\n        if (passedCount == inputs.length) System.out.println("TEST_RESULTS: " + passedCount + "/" + inputs.length + " passed");\n        else System.out.println("TEST_FAILURE: " + (inputs.length - passedCount) + " test cases failed");\n    }\n}`
       },
       aiFeedback: {
         score: 94,
@@ -1014,7 +1014,7 @@ except Exception as err:
       description: 'Given a string s, count and return the total number of vowels (a, e, i, o, u) in the string. Both uppercase and lowercase vowels should be counted.',
       examples: [
         { input: 's = "hello"', output: '2', explanation: 'The vowels are \'e\' and \'o\', totaling 2.' },
-        { input: 's = "Skillzy"', output: '1', explanation: 'The only vowel is \'i\'.' }
+        { input: 's = "Skilotech"', output: '3', explanation: 'The vowels are \'i\', \'o\', and \'e\'.' }
       ],
       constraints: [
         '0 <= s.length <= 10^5',
@@ -1034,7 +1034,7 @@ try {
   if (typeof countVowels !== 'function') throw new Error("Function countVowels is not defined");
   const cases = [
     { input: "hello", expected: 2 },
-    { input: "Skillzy", expected: 1 }
+    { input: "Skilotech", expected: 3 }
   ];
   let passedCount = 0;
   cases.forEach((c, idx) => {
@@ -1061,7 +1061,7 @@ try:
     func = count_vowels if 'count_vowels' in globals() else countVowels
     cases = [
         { "input": "hello", "expected": 2 },
-        { "input": "Skillzy", "expected": 1 }
+        { "input": "Skilotech", "expected": 3 }
     ]
     passed_count = 0
     for idx, c in enumerate(cases):

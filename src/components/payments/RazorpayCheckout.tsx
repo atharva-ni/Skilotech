@@ -153,7 +153,7 @@ export default function RazorpayCheckout({
           userId: user.id,
         },
         theme: {
-          color: '#6366f1', // Skillzy purple theme color
+          color: '#6366f1', // Skilotech purple theme color
         },
         handler: async function (response: any) {
           // Razorpay returns: razorpay_payment_id, razorpay_order_id, razorpay_signature

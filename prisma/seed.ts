@@ -35,7 +35,7 @@ async function main() {
   const student = await prisma.user.create({
     data: {
       clerkId: 'usr_student_1',
-      email: 'aarav@skillzy.com',
+      email: 'aarav@skilotech.com',
       firstName: 'Aarav',
       lastName: 'Mehta',
       username: 'aarav_mehta',
@@ -51,7 +51,7 @@ async function main() {
   const instructor = await prisma.user.create({
     data: {
       clerkId: 'usr_instructor_1',
-      email: 'priya@skillzy.com',
+      email: 'priya@skilotech.com',
       firstName: 'Priya',
       lastName: 'Sharma',
       username: 'priya_sharma',
@@ -66,7 +66,7 @@ async function main() {
   const recruiter = await prisma.user.create({
     data: {
       clerkId: 'usr_recruiter_1',
-      email: 'rahul@skillzy.com',
+      email: 'rahul@skilotech.com',
       firstName: 'Rahul',
       lastName: 'Gupta',
       username: 'rahul_gupta',
@@ -81,7 +81,7 @@ async function main() {
   const admin = await prisma.user.create({
     data: {
       clerkId: 'usr_admin_1',
-      email: 'sneha@skillzy.com',
+      email: 'sneha@skilotech.com',
       firstName: 'Sneha',
       lastName: 'Verma',
       username: 'sneha_verma',
@@ -563,7 +563,7 @@ Implement the \`binary_search\` function in Python:
       totalAmount: 299900,
       currency: 'INR',
       billingName: 'Aarav Mehta',
-      billingEmail: 'aarav@skillzy.com',
+      billingEmail: 'aarav@skilotech.com',
       billingAddress: '123 Main Street, Mumbai, India',
     },
   });

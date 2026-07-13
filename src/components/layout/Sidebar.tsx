@@ -113,7 +113,7 @@ export default function Sidebar() {
                   color: '#171717',
                 }}
               >
-                Skillzy
+                Skilotech
               </motion.span>
             )}
           </AnimatePresence>

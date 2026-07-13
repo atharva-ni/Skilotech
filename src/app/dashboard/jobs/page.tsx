@@ -149,7 +149,7 @@ export default function StudentJobBoard() {
       {/* Header Banner */}
       <div className="page-header" style={{ position: 'relative', overflow: 'hidden' }}>
         <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          💼 Skillzy Placement Board
+          💼 Skilotech Placement Board
         </h1>
         <p className="page-subtitle">Elevate your career. Apply to active developer roles and track your interviews.</p>
         
@@ -640,6 +640,7 @@ export default function StudentJobBoard() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
