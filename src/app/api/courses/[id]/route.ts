@@ -86,7 +86,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     let completedSteps: string[] = [];
 
     if (dbUser) {
-      const enrollment = await prisma.enrollment.findUnique({
+      let enrollment = await prisma.enrollment.findUnique({
         where: {
           userId_courseId: {
             userId: dbUser.id,
@@ -94,6 +94,20 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           },
         },
       });
+
+      if (!enrollment && (
+        dbUser.role === UserRole.admin ||
+        dbUser.role === UserRole.super_admin ||
+        course.instructorId === dbUser.id
+      )) {
+        enrollment = await prisma.enrollment.create({
+          data: {
+            userId: dbUser.id,
+            courseId: id,
+            status: 'active',
+          },
+        });
+      }
 
       if (enrollment) {
         isEnrolled = true;

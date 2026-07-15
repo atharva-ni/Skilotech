@@ -59,7 +59,7 @@ export default function MyLearning() {
   }, [user]);
 
   const filteredCourses = enrolledCourses.filter((c) => {
-    if (filter === 'in-progress') return c.progress < 100;
+    if (filter === 'in-progress') return c.progress > 0 && c.progress < 100;
     if (filter === 'completed') return c.progress === 100;
     return true;
   });

@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import ProgressBar from '@/components/ui/ProgressBar';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import { 
   BookOpen, FileText, Play, Code, Lock, CheckCircle2, ChevronRight, ChevronDown, 
-  ArrowLeft, ArrowRight, Folder, Terminal, Sparkles, ChevronLeft
+  ArrowLeft, ArrowRight, Folder, Terminal, Sparkles, ChevronLeft, Star,
+  Volume2, Pause, Square
 } from 'lucide-react';
 
 interface PageProps {
@@ -17,6 +19,7 @@ interface PageProps {
 export default function StepWiseLearningPage({ params }: PageProps) {
   const { id: courseId } = use(params);
   const { user } = useAuth();
+  const router = useRouter();
 
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -174,6 +177,134 @@ export default function StepWiseLearningPage({ params }: PageProps) {
     return false;
   };
 
+  // Completion & Review states
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [reviewText, setReviewText] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  const handleSubmitReview = async () => {
+    if (rating < 1 || rating > 5) {
+      toast.error('Please select a rating between 1 and 5 stars');
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      toast.loading('Submitting review...');
+
+      const res = await fetch(`/api/courses/${courseId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating, reviewText }),
+      });
+
+      const data = await res.json();
+      toast.dismiss();
+
+      if (res.ok) {
+        toast.success('Thank you for your feedback! 🎉');
+        router.push(`/dashboard/courses/${courseId}`);
+      } else {
+        throw new Error(data.error || 'Failed to submit review');
+      }
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error(err.message || 'Error submitting feedback');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  // Text-To-Speech (TTS) States and Effects
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [speechRate, setSpeechRate] = useState(1);
+
+  // Stop reading when changing steps or text pages
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+    setIsPaused(false);
+  }, [activeStepId, currentTextPage]);
+
+  // Cancel voice reading when leaving/unmounting component
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const startSpeaking = (textToSpeak: string) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      toast.error('Text-to-speech is not supported in this browser.');
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+
+    // Clean markdown headings, lists, links, code blocks
+    const cleanText = textToSpeak
+      .replace(/```[\s\S]*?```/g, '') // Strip complete code blocks
+      .replace(/[#*`>_\-]/g, ' ')     // Strip markdown characters
+      .replace(/\[.*?\]\(.*?\)/g, ' ') // Strip markdown links
+      .replace(/\s+/g, ' ')           // Normalize spaces
+      .trim();
+
+    if (!cleanText) {
+      toast.error('No readable text found on this page.');
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = speechRate;
+    
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+
+    utterance.onerror = (e) => {
+      // In some browsers, calling cancel triggers an error boundary, which we can safely ignore
+      if (e.error !== 'interrupted') {
+        console.error('SpeechSynthesis error:', e);
+      }
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+
+    setIsSpeaking(true);
+    setIsPaused(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const pauseSpeaking = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    }
+  };
+
+  const resumeSpeaking = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      setIsPaused(false);
+    }
+  };
+
   const handleMarkComplete = async () => {
     if (!activeStepId) return;
 
@@ -202,6 +333,7 @@ export default function StepWiseLearningPage({ params }: PageProps) {
           setActiveStepId(flatSteps[nextIndex].id);
         } else {
           toast.success('Congratulations! You completed the course! 🎉');
+          setShowCompletion(true);
         }
       } else {
         throw new Error(data.error || 'Failed to complete step');
@@ -525,43 +657,347 @@ export default function StepWiseLearningPage({ params }: PageProps) {
         </div>
 
         {/* Step Content Area */}
-        {activeStep ? (() => {
+        {showCompletion ? (
+          <div style={{
+            maxWidth: '680px',
+            margin: '40px auto',
+            padding: '40px',
+            background: '#ffffff',
+            border: '1px solid var(--border-primary)',
+            borderRadius: 'var(--radius-xl)',
+            boxShadow: 'var(--shadow-premium)',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '28px',
+            width: '100%',
+          }}>
+            <div style={{
+              width: '80px', height: '80px', borderRadius: '50%',
+              background: 'rgba(16, 185, 129, 0.1)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', color: '#10b981',
+              fontSize: '2.5rem',
+            }}>
+              🎉
+            </div>
+            <div>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                Course Completed successfully!
+              </h1>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6' }}>
+                Congratulations! You have completed all the steps in <strong>{course.title}</strong>. 
+                We would love to hear your feedback about your learning experience.
+              </p>
+            </div>
+
+            <div style={{ width: '100%', height: '1px', background: 'var(--border-primary)' }} />
+
+            {/* Star Rating Selector */}
+            <div>
+              <p style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '12px' }}>
+                How would you rate this course?
+              </p>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const active = star <= (hoverRating ?? rating);
+                  return (
+                    <Star
+                      key={star}
+                      size={36}
+                      style={{
+                        cursor: 'pointer',
+                        fill: active ? '#f59e0b' : 'none',
+                        color: active ? '#f59e0b' : 'var(--text-muted)',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(null)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Feedback Comments Textarea */}
+            <div style={{ width: '100%', textAlign: 'left' }}>
+              <label style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', display: 'block', marginBottom: '8px' }}>
+                Share your feedback (optional)
+              </label>
+              <textarea
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="What did you like? What can be improved?"
+                rows={4}
+                className="input"
+                style={{
+                  width: '100%',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '12px 16px',
+                  fontSize: '0.9rem',
+                  lineHeight: '1.5',
+                  resize: 'vertical',
+                }}
+              />
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '8px' }}>
+              <button
+                onClick={handleSubmitReview}
+                disabled={submittingReview}
+                className="btn btn-primary"
+                style={{
+                  padding: '12px 24px',
+                  fontSize: '0.9rem',
+                  fontWeight: 700,
+                  borderRadius: '8px',
+                  width: '100%',
+                  background: '#10b981',
+                  borderColor: '#10b981',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                  cursor: submittingReview ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {submittingReview ? 'Submitting Review...' : 'Submit Feedback'}
+              </button>
+              
+              <button
+                onClick={() => router.push(`/dashboard/courses/${courseId}`)}
+                disabled={submittingReview}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  alignSelf: 'center',
+                  marginTop: '4px',
+                }}
+              >
+                Skip & Return to Course Overview
+              </button>
+            </div>
+          </div>
+        ) : activeStep ? (() => {
           const textPages = activeStep && (activeStep.stepType === 'intro' || activeStep.stepType === 'text')
             ? splitTextIntoPages(activeStep.textContent || '')
             : [];
 
           return (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '32px' }}>
-              {/* Header info */}
-              <div>
-                {/* Premium color-coded badges based on step type */}
-                {activeStep.stepType === 'intro' && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(59,130,246,0.08)', color: '#2563eb', border: '1px solid rgba(59,130,246,0.15)' }}>
-                    <Sparkles size={10} /> Intro Step
-                  </span>
+              {/* Header info wrapper */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: '16px',
+                borderBottom: '1px solid var(--border-secondary)',
+                paddingBottom: '20px',
+              }}>
+                <div>
+                  {/* Premium color-coded badges based on step type */}
+                  {activeStep.stepType === 'intro' && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(59,130,246,0.08)', color: '#2563eb', border: '1px solid rgba(59,130,246,0.15)' }}>
+                      <Sparkles size={10} /> Intro Step
+                    </span>
+                  )}
+                  {activeStep.stepType === 'text' && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(16,185,129,0.08)', color: '#059669', border: '1px solid rgba(16,185,129,0.15)' }}>
+                      <FileText size={10} /> Reading Step
+                    </span>
+                  )}
+                  {activeStep.stepType === 'video' && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1px solid rgba(245,158,11,0.15)' }}>
+                      <Play size={10} style={{ fill: 'currentColor' }} /> Video Step
+                    </span>
+                  )}
+                  {activeStep.stepType === 'lab' && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(139,92,246,0.08)', color: '#7c3aed', border: '1px solid rgba(139,92,246,0.15)' }}>
+                      <Code size={10} /> Lab Step
+                    </span>
+                  )}
+                  
+                  <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '12px', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
+                    {activeStep.title}
+                  </h1>
+                  <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '6px', fontWeight: 500 }}>
+                    Lesson: <span style={{ color: 'var(--text-secondary)' }}>{activeStep.lessonTitle}</span>
+                  </p>
+                </div>
+
+                {/* Audio Reader Widget (Only show on Intro or Text reading steps) */}
+                {(activeStep.stepType === 'intro' || activeStep.stepType === 'text') && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+                    border: '1px solid var(--border-secondary)',
+                    borderRadius: '30px',
+                    padding: '8px 16px',
+                    boxShadow: 'var(--shadow-sm)',
+                    alignSelf: 'flex-start',
+                  }}>
+                    <style>{`
+                      @keyframes pulse {
+                        0% { transform: scale(1); opacity: 1; }
+                        50% { transform: scale(1.05); opacity: 0.8; }
+                        100% { transform: scale(1); opacity: 1; }
+                      }
+                    `}</style>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background: isSpeaking ? 'rgba(99, 102, 241, 0.1)' : 'rgba(100, 116, 139, 0.08)',
+                        color: isSpeaking ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                        animation: isSpeaking && !isPaused ? 'pulse 2s infinite' : 'none',
+                      }}>
+                        <Volume2 size={15} />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1 }}>
+                          Audio Reader
+                        </span>
+                        <span style={{ fontSize: '9px', color: 'var(--text-tertiary)', marginTop: '2px', lineHeight: 1 }}>
+                          {isSpeaking ? (isPaused ? 'Paused' : 'Reading...') : 'Listen'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ height: '16px', width: '1px', background: 'var(--border-secondary)' }} />
+
+                    {/* Speed Selector */}
+                    <select
+                      value={speechRate}
+                      onChange={(e) => {
+                        const newRate = parseFloat(e.target.value);
+                        setSpeechRate(newRate);
+                        if (isSpeaking && !isPaused) {
+                          setTimeout(() => {
+                            startSpeaking(textPages[currentTextPage] || '');
+                          }, 50);
+                        }
+                      }}
+                      style={{
+                        padding: '2px 4px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-secondary)',
+                        background: '#ffffff',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        outline: 'none',
+                      }}
+                    >
+                      <option value="0.75">0.75x</option>
+                      <option value="1">1.0x</option>
+                      <option value="1.25">1.25x</option>
+                      <option value="1.5">1.5x</option>
+                      <option value="1.75">1.75x</option>
+                      <option value="2">2.0x</option>
+                    </select>
+
+                    <div style={{ height: '16px', width: '1px', background: 'var(--border-secondary)' }} />
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {!isSpeaking ? (
+                        <button
+                          onClick={() => startSpeaking(textPages[currentTextPage] || '')}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 10px',
+                            borderRadius: '15px',
+                            border: 'none',
+                            background: 'var(--accent-primary)',
+                            color: '#ffffff',
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(99, 102, 241, 0.15)',
+                          }}
+                        >
+                          <Play size={10} fill="#ffffff" /> Play
+                        </button>
+                      ) : (
+                        <>
+                          {isPaused ? (
+                            <button
+                              onClick={resumeSpeaking}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px 10px',
+                                borderRadius: '15px',
+                                border: 'none',
+                                background: 'var(--accent-primary)',
+                                color: '#ffffff',
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 4px rgba(99, 102, 241, 0.15)',
+                              }}
+                            >
+                              <Play size={10} fill="#ffffff" /> Resume
+                            </button>
+                          ) : (
+                            <button
+                              onClick={pauseSpeaking}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '4px 10px',
+                                borderRadius: '15px',
+                                border: '1px solid var(--border-secondary)',
+                                background: '#ffffff',
+                                color: 'var(--text-primary)',
+                                fontSize: '10px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <Pause size={10} /> Pause
+                            </button>
+                          )}
+
+                          <button
+                            onClick={stopSpeaking}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: '22px',
+                              height: '22px',
+                              borderRadius: '50%',
+                              border: '1px solid var(--border-secondary)',
+                              background: '#ffffff',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                            }}
+                            title="Stop"
+                          >
+                            <Square size={8} fill="#ef4444" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 )}
-                {activeStep.stepType === 'text' && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(16,185,129,0.08)', color: '#059669', border: '1px solid rgba(16,185,129,0.15)' }}>
-                    <FileText size={10} /> Reading Step
-                  </span>
-                )}
-                {activeStep.stepType === 'video' && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(245,158,11,0.08)', color: '#d97706', border: '1px solid rgba(245,158,11,0.15)' }}>
-                    <Play size={10} style={{ fill: 'currentColor' }} /> Video Step
-                  </span>
-                )}
-                {activeStep.stepType === 'lab' && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(139,92,246,0.08)', color: '#7c3aed', border: '1px solid rgba(139,92,246,0.15)' }}>
-                    <Code size={10} /> Lab Step
-                  </span>
-                )}
-                
-                <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '12px', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
-                  {activeStep.title}
-                </h1>
-                <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-tertiary)', marginTop: '6px', fontWeight: 500 }}>
-                  Lesson: <span style={{ color: 'var(--text-secondary)' }}>{activeStep.lessonTitle}</span>
-                </p>
               </div>
 
               {/* Step Body rendering based on StepType */}
@@ -582,7 +1018,8 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                       minHeight: '220px',
                     }}>
                       <MarkdownRenderer text={textPages[currentTextPage]} />
-                    </div>                     {textPages.length > 1 && (
+                    </div>
+                    {textPages.length > 1 && (
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -644,7 +1081,12 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                       boxShadow: 'var(--shadow-md)',
                     }}>
                       <iframe
-                        src={activeStep.videoUrl?.replace('watch?v=', 'embed/')}
+                        src={(() => {
+                          const url = activeStep.videoUrl || '';
+                          const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+                          if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+                          return url.replace('watch?v=', 'embed/');
+                        })()}
                         title={activeStep.title}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -749,30 +1191,56 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                 </button>
 
                 {completedSteps.includes(activeStep.id) ? (
-                  <button
-                    disabled={activeStepIndex === flatSteps.length - 1}
-                    onClick={() => {
-                      setActiveStepId(flatSteps[activeStepIndex + 1].id);
-                      handleScrollToTop();
-                    }}
-                    style={{
-                      padding: '10px 24px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--accent-primary)',
-                      background: 'var(--accent-primary)',
-                      color: '#ffffff',
-                      fontSize: 'var(--font-size-xs)',
-                      fontWeight: 600,
-                      cursor: activeStepIndex === flatSteps.length - 1 ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)',
-                      transition: 'all 0.15s ease',
-                    }}
-                  >
-                    Next Step <ChevronRight size={16} />
-                  </button>
+                  activeStepIndex === flatSteps.length - 1 ? (
+                    <button
+                      onClick={() => {
+                        setShowCompletion(true);
+                        handleScrollToTop();
+                      }}
+                      style={{
+                        padding: '10px 24px',
+                        borderRadius: '8px',
+                        border: '1px solid #10b981',
+                        background: '#10b981',
+                        color: '#ffffff',
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      Finish Course <CheckCircle2 size={16} />
+                    </button>
+                  ) : (
+                    <button
+                      disabled={activeStepIndex === flatSteps.length - 1}
+                      onClick={() => {
+                        setActiveStepId(flatSteps[activeStepIndex + 1].id);
+                        handleScrollToTop();
+                      }}
+                      style={{
+                        padding: '10px 24px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--accent-primary)',
+                        background: 'var(--accent-primary)',
+                        color: '#ffffff',
+                        fontSize: 'var(--font-size-xs)',
+                        fontWeight: 600,
+                        cursor: activeStepIndex === flatSteps.length - 1 ? 'not-allowed' : 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      Next Step <ChevronRight size={16} />
+                    </button>
+                  )
                 ) : (
                   <button
                     onClick={async () => {

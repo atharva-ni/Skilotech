@@ -4,8 +4,216 @@ const prisma = new PrismaClient();
 
 // Helper to create a unique ID for steps
 function makeStepId(lessonId: string, type: string) {
-  // Use a predictable slug based on lesson UUID and type
   return `${lessonId.substring(0, 18)}-${type}`;
+}
+
+// Generates highly detailed, student-friendly textbook articles for all 106 lessons dynamically
+function generatePythonTextbookContent(lessonTitle: string, moduleTitle: string): string {
+  let keyExplanations = "";
+  let codeSample = "";
+  let commonMistakes = "";
+  
+  if (moduleTitle.includes('Introduction')) {
+    keyExplanations = `Python is a high-level, interpreted, dynamically typed programming language created by Guido van Rossum in 1991.
+    * **Simplicity**: Python is designed to be highly readable, using clean indentation rather than brackets or semi-colons.
+    * **Interpreted Nature**: Python code is processed at runtime by the interpreter line by line. There is no separate compile step needed before running.
+    * **Multi-Paradigm**: Python supports Procedural, Functional, and Object-Oriented programming paradigms.`;
+    codeSample = `# Printing output in Python
+print("Hello, Python!")
+
+# Defining variables dynamically
+language = "Python"
+version = 3.12
+print(f"Learning {language} version {version}")`;
+    commonMistakes = `* **SyntaxError: invalid syntax**: Often caused by missing colons at the end of function declarations or control statements.
+* **IndentationError**: Mixing spaces and tabs or having inconsistent spaces. Python requires consistent 4 spaces by default.`;
+  }
+  else if (moduleTitle.includes('Variables')) {
+    keyExplanations = `Variables in Python are names that point to objects in the computer's memory.
+    * **Dynamic Typing**: Python dynamically determines the variable type at runtime. You do not declare variable types explicitly (e.g. no 'int' or 'string' keywords).
+    * **Object References**: When you write \`x = 10\`, Python creates an integer object 10 in memory, and points the name \`x\` to it. If you reassign \`x = "hello"\`, the pointer changes.
+    * **Data Types**: Common built-in types include Integers, Floats, Strings, Booleans, and NoneType.`;
+    codeSample = `# Variable assignments and type verification
+x = 42
+print(type(x))  # Output: <class 'int'>
+
+x = "Forty-Two"
+print(type(x))  # Output: <class 'str'>`;
+    commonMistakes = `* **NameError: name 'x' is not defined**: Caused by referencing a variable before it has been assigned a value.
+* **TypeErrors during operations**: Trying to concatenate different types, such as adding a string to an integer (\`"age: " + 10\`). Use explicit casting (\`str(10)\`) instead.`;
+  }
+  else if (moduleTitle.includes('Operators')) {
+    keyExplanations = `Operators are symbols that perform calculations or comparisons on values:
+    * **Arithmetic**: \`+\` (addition), \`-\` (subtraction), \`*\` (multiplication), \`/\` (float division), \`//\` (floor division), \`%\` (modulo), and \`**\` (exponentiation).
+    * **Comparison**: \`==\` (equal to), \`!=\` (not equal to), \`>\` (greater than), and \`<\` (less than).
+    * **Logical**: \`and\` (both true), \`or\` (at least one true), and \`not\` (negation).
+    * **Identity & Membership**: \`is\` compares object memory references; \`in\` checks if a value exists inside a collection.`;
+    codeSample = `# Arithmetic vs Floor Division
+print(5 / 2)  # Output: 2.5
+print(5 // 2) # Output: 2
+
+# Membership Checking
+fruits = ["apple", "banana"]
+print("apple" in fruits) # Output: True`;
+    commonMistakes = `* **Using = instead of ==**: A single \`=\` is for variable assignment; double \`==\` is for checking equality.
+* **Precedence confusion**: Assuming left-to-right calculation without considering PEMDAS rules. Always use parentheses to group arithmetic operations.`;
+  }
+  else if (moduleTitle.includes('Strings')) {
+    keyExplanations = `Strings in Python are immutable sequences of Unicode characters:
+    * **Immutability**: Once a string is created, its characters cannot be modified in-place. Operations return a new string object instead.
+    * **Indexing**: Access characters using 0-based indexing (\`s[0]\` is first). Negative indices check from the end (\`s[-1]\` is last).
+    * **Slicing**: Extract sub-strings using the syntax \`s[start:stop:step]\`.`;
+    codeSample = `# String slicing examples
+msg = "PythonCoding"
+print(msg[0:6])   # Output: "Python"
+print(msg[::-1])  # Output: "gnidoCnohtyP" (Reverse string)
+
+# Formatting with f-strings
+name = "Student"
+print(f"Welcome, {name}!")`;
+    commonMistakes = `* **TypeError: 'str' object does not support item assignment**: Trying to do \`s[0] = 'H'\`. You must construct a new string instead.
+* **IndexError: string index out of range**: Accessing an index that exceeds the length of the string.`;
+  }
+  else if (moduleTitle.includes('Collections')) {
+    keyExplanations = `Collections are built-in containers that hold multiple values:
+    * **Lists**: Ordered, mutable, dynamic arrays: \`[1, 2, 3]\`.
+    * **Tuples**: Ordered, immutable sequences: \`(1, 2, 3)\`.
+    * **Sets**: Unordered collections of unique, hashable items: \`{1, 2, 3}\`.
+    * **Dictionaries**: Key-value mappings: \`{"name": "Alice", "age": 25}\`.`;
+    codeSample = `# Dictionary and List comprehension
+numbers = [1, 2, 3, 4]
+squares = [n**2 for n in numbers if n % 2 == 0]
+print(squares)  # Output: [4, 16]
+
+# Set operations
+set_a = {1, 2, 3}
+set_b = {3, 4, 5}
+print(set_a.union(set_b)) # Output: {1, 2, 3, 4, 5}`;
+    commonMistakes = `* **KeyError**: Referencing a dictionary key that doesn't exist. Use \`dict.get(key, default)\` to avoid crashes.
+* **Mutating a collection while iterating**: Modifying lists directly inside a \`for\` loop over that same list, causing skipped elements or infinite loops.`;
+  }
+  else if (moduleTitle.includes('Control Flow')) {
+    keyExplanations = `Control flow allows programs to execute different code blocks based on condition evaluations:
+    * **if / elif / else**: Evaluates boolean conditions sequentially from top to bottom.
+    * **Match-Case**: Introduced in Python 3.10, this is Python's switch-case equivalent supporting structural pattern matching.
+    * **Ternary Expression**: Inline condition evaluations: \`val = x if cond else y\`.`;
+    codeSample = `# Match-case pattern matching
+status_code = 404
+match status_code:
+    case 200:
+        print("Success")
+    case 404:
+        print("Not Found")
+    case _:
+        print("Unknown Status")`;
+    commonMistakes = `* **Forgetting the colon**: Every \`if\`, \`elif\`, \`else\`, or \`case\` statement must end with a \`:\`.
+* **Incorrect Indentation**: Code inside conditional blocks must be indented consistently.`;
+  }
+  else if (moduleTitle.includes('Loops')) {
+    keyExplanations = `Loops repeat block execution until criteria are met:
+    * **for loops**: Iterate over iterables (lists, ranges, collections) sequentially.
+    * **while loops**: Run repeatedly as long as a boolean condition holds true.
+    * **Loop Controls**: \`break\` exits the loop immediately; \`continue\` skips the current iteration; \`pass\` serves as a null statement placeholder.`;
+    codeSample = `# Looping with enumerate
+colors = ["red", "green", "blue"]
+for index, color in enumerate(colors):
+    print(f"Index {index}: {color}")`;
+    commonMistakes = `* **Infinite while loops**: Forgetting to update the loop condition variable inside the loop body, causing the program to hang.
+* **Index Errors**: Looping over a list index using \`range(len(lst))\` but mutating the list size inside the loop.`;
+  }
+  else if (moduleTitle.includes('Functions')) {
+    keyExplanations = `Functions are modular blocks of reusable code defined with the \`def\` keyword:
+    * **Arguments**: Positional, keyword, default parameters, and variable-length arguments (\`*args\` and \`**kwargs\`).
+    * **Lambda**: Anonymous, single-expression inline functions: \`lambda x: x + 1\`.
+    * **Decorators**: Functions that wrap other functions to modify their behavior without changing their source code.`;
+    codeSample = `# Function with default arguments and *args
+def greet(message="Hello", *names):
+    for name in names:
+        print(f"{message}, {name}!")
+
+greet("Hi", "Alice", "Bob")`;
+    commonMistakes = `* **Using mutable default arguments**: Using lists or dictionaries as default arguments (e.g. \`def append_to(val, lst=[])\`). Since defaults are created once at compile time, the list persists across multiple calls! Use \`None\` instead.`;
+  }
+  else if (moduleTitle.includes('Exception')) {
+    keyExplanations = `Exceptions represent runtime errors that stop execution. We handle them to protect programs from crashing:
+    * **try**: Holds code that might trigger an exception.
+    * **except**: Catches and handles the exception.
+    * **else**: Runs only if no exceptions were thrown.
+    * **finally**: Always runs, regardless of whether exceptions were thrown or caught.`;
+    codeSample = `# Safe division try-except-finally
+try:
+    result = 10 / 0
+except ZeroDivisionError as e:
+    print(f"Error caught: {e}")
+finally:
+    print("Execution completed.")`;
+    commonMistakes = `* **Catching all exceptions**: Using a bare \`except:\` block. This catches critical errors like keyboard interruptions (Ctrl+C). Always specify concrete exceptions (e.g., \`except ValueError:\`).`;
+  }
+  else {
+    // Object Oriented Programming
+    keyExplanations = `Object-Oriented Programming (OOP) organizes software around classes and objects:
+    * **Class**: A user-defined blueprint for creating objects.
+    * **Object**: An instance of a Class containing data and methods.
+    * **OOP Pillars**:
+      1. *Inheritance*: Subclasses inherit properties of parent classes.
+      2. *Polymorphism*: Method overriding enables standard interfaces for different types.
+      3. *Encapsulation*: Hiding object details (using double underscores like \`__variable\` for private members).
+      4. *Abstraction*: Hiding complex logic behind simple interfaces.`;
+    codeSample = `# Class definition and constructor
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def make_sound(self):
+        pass
+
+class Dog(Animal):
+    def make_sound(self):
+        return "Woof!"
+
+my_dog = Dog("Rex")
+print(my_dog.make_sound()) # Output: "Woof!"`;
+    commonMistakes = `* **Forgetting 'self'**: Every instance method in a class must take \`self\` as its first parameter. Forgetting this results in a \`TypeError: method() takes 0 positional arguments but 1 was given\`.
+* **Confusing class variables with instance variables**: Defining class variables outside the constructor that accidentally share state across all instances.`;
+  }
+
+  // Fleshing out lesson specific textbook descriptions
+  return `# Textbook Guide: ${lessonTitle}
+
+Welcome to this comprehensive tutorial on **${lessonTitle}** under **${moduleTitle}**. Here, we break down the core theoretical definitions, present real-world examples, write code demonstrations, and outline common mistakes you must avoid.
+
+---
+
+## 📖 Theoretical Concepts
+
+Here are the key academic and industry principles you must understand:
+
+${keyExplanations}
+
+---
+
+## 💻 Code Demonstration
+
+Below is a clean, practical code snippet illustrating this topic in Python:
+
+\`\`\`python
+${codeSample}
+\`\`\`
+
+---
+
+## 🐞 Common Mistakes & Gotchas
+
+Be on the lookout for these frequent developer errors:
+
+${commonMistakes}
+
+---
+
+### 📝 Next Steps
+1. Practice writing this code structure in a local Python editor.
+2. Observe how modifying variables, types, or syntax changes compilation output.
+3. Advance to the next lesson or click the interactive coding lab!`;
 }
 
 async function main() {
@@ -136,43 +344,41 @@ except Exception as e:
     },
     "Arithmetic Operators": {
       title: "Lab - Writing a Simple Calculator",
-      starterCode: `def calculator(a, b, op):
-    # TODO: Perform calculation of a and b based on the operator 'op'.
-    # Supported operators: '+', '-', '*', '/'
-    # Return the float or integer result.
+      starterCode: `def simple_calculator(a, b, op):
+    # TODO: Perform calculation 'a op b' and return the result.
+    # Supported operators are '+', '-', '*', '/'.
+    # If division by zero is attempted, return "error".
+    # If operation is not supported, return "invalid".
     pass
 `,
-      solutionCode: `def calculator(a, b, op):
-    if op == '+':
-        return a + b
-    elif op == '-':
-        return a - b
-    elif op == '*':
-        return a * b
+      solutionCode: `def simple_calculator(a, b, op):
+    if op == '+': return a + b
+    elif op == '-': return a - b
+    elif op == '*': return a * b
     elif op == '/':
+        if b == 0: return "error"
         return a / b
-    return None
+    return "invalid"
 `,
-      instructions: `### Interactive Lab: Arithmetic Operators
+      instructions: `### Interactive Lab: Simple Calculator
 
-Create a simple calculator function \`calculator(a, b, op)\` that:
-1. Performs addition if \`op\` is \`'+'\`.
-2. Performs subtraction if \`op\` is \`'-'\`.
-3. Performs multiplication if \`op\` is \`'*'\`.
-4. Performs division if \`op\` is \`'/'\`.`,
+Implement a function \`simple_calculator(a, b, op)\` that:
+1. Calculates addition (\`+\`), subtraction (\`-\`), multiplication (\`*\`), and division (\`/\`).
+2. Safely handles division by zero by returning the string \`"error"\`.
+3. Handles unsupported operators by returning the string \`"invalid"\`.`,
       testCode: `
 try:
-    if 'calculator' not in globals():
-        raise NameError("Function calculator is not defined")
+    if 'simple_calculator' not in globals():
+        raise NameError("Function simple_calculator is not defined")
     cases = [
         { "a": 10, "b": 5, "op": "+", "expected": 15 },
-        { "a": 20, "b": 8, "op": "-", "expected": 12 },
-        { "a": 4, "b": 3, "op": "*", "expected": 12 },
-        { "a": 15, "b": 3, "op": "/", "expected": 5.0 }
+        { "a": 10, "b": 5, "op": "/", "expected": 2 },
+        { "a": 10, "b": 0, "op": "/", "expected": "error" },
+        { "a": 10, "b": 5, "op": "%", "expected": "invalid" }
     ]
     passed_count = 0
     for idx, c in enumerate(cases):
-        act = calculator(c["a"], c["b"], c["op"])
+        act = simple_calculator(c["a"], c["b"], c["op"])
         passed = act == c["expected"]
         if passed: passed_count += 1
         print(f"[TEST_CASE] {idx} | {'PASS' if passed else 'FAIL'} | Actual: {act}")
@@ -189,13 +395,13 @@ except Exception as e:
     "String Slicing": {
       title: "Lab - Extractor Middle Substring",
       starterCode: `def get_middle_three(s):
-      # TODO: Return the middle three characters of the string 's'.
-      # Assumes string length is odd and at least 3.
-      pass
+    # TODO: Return exactly three characters centered around the middle of string 's'.
+    # You can assume string length is odd and at least 3.
+    pass
 `,
       solutionCode: `def get_middle_three(s):
     mid = len(s) // 2
-    return s[mid - 1: mid + 2]
+    return s[mid-1 : mid+2]
 `,
       instructions: `### Interactive Lab: String Slicing
 
@@ -275,34 +481,34 @@ except Exception as e:
     },
     "Dictionaries": {
       title: "Lab - Character Counter",
-      starterCode: `def count_characters(s):
-    # TODO: Return a dictionary counting the occurrence of each character in string 's'.
-    # Spaces and special signs should be counted.
+      starterCode: `def char_frequency(s):
+    # TODO: Return a dictionary containing the frequency counts of each character in string 's'.
     pass
 `,
-      solutionCode: `def count_characters(s):
-    counts = {}
+      solutionCode: `def char_frequency(s):
+    freq = {}
     for char in s:
-        counts[char] = counts.get(char, 0) + 1
-    return counts
+        freq[char] = freq.get(char, 0) + 1
+    return freq
 `,
-      instructions: `### Interactive Lab: Dictionary Mapping
+      instructions: `### Interactive Lab: Dictionary Construction
 
-Write a function \`count_characters(s)\` that builds a frequency dictionary:
-1. Iterate over every character in string \`s\`.
-2. Store character counts in a dictionary where the keys are characters and values are their frequency.
-3. Return the dictionary.`,
+Dictionaries match keys to values. Write a function \`char_frequency(s)\` that:
+1. Loops through string \`s\`.
+2. Computes the frequency count of each character.
+3. Returns a dictionary where keys are unique characters and values are their respective counts.`,
       testCode: `
 try:
-    if 'count_characters' not in globals():
-        raise NameError("Function count_characters is not defined")
+    if 'char_frequency' not in globals():
+        raise NameError("Function char_frequency is not defined")
     cases = [
-        { "input": "aba", "expected": {"a": 2, "b": 1} },
-        { "input": "code", "expected": {"c": 1, "o": 1, "d": 1, "e": 1} }
+        { "input": "aba", "expected": { "a": 2, "b": 1 } },
+        { "input": "c", "expected": { "c": 1 } },
+        { "input": "", "expected": {} }
     ]
     passed_count = 0
     for idx, c in enumerate(cases):
-        act = count_characters(c["input"])
+        act = char_frequency(c["input"])
         passed = act == c["expected"]
         if passed: passed_count += 1
         print(f"[TEST_CASE] {idx} | {'PASS' if passed else 'FAIL'} | Actual: {act}")
@@ -320,7 +526,7 @@ except Exception as e:
       title: "Lab - Leap Year Checker",
       starterCode: `def is_leap_year(year):
     # TODO: Return True if 'year' is a leap year, otherwise False.
-    # Rules: divisible by 4, but not by 100 unless also divisible by 400.
+    # A year is a leap year if it is divisible by 4, but not by 100, unless it is also divisible by 400.
     pass
 `,
       solutionCode: `def is_leap_year(year):
@@ -332,10 +538,9 @@ except Exception as e:
 `,
       instructions: `### Interactive Lab: Conditional Branches
 
-Implement the leap year checker function \`is_leap_year(year)\`:
-1. A year is a leap year if it is divisible by \`4\`.
-2. However, years divisible by \`100\` are NOT leap years, unless they are also divisible by \`400\`.
-3. Return \`True\` or \`False\`.`,
+Implement the leap year checker function \`is_leap_year(year)\` in Python:
+1. Return \`True\` if the year is leap, else \`False\`.
+2. Apply standard leap rules: divisible by 400 is leap; otherwise divisible by 100 is not leap; otherwise divisible by 4 is leap.`,
       testCode: `
 try:
     if 'is_leap_year' not in globals():
@@ -364,32 +569,32 @@ except Exception as e:
     },
     "for loops": {
       title: "Lab - Summing Digits",
-      starterCode: `def sum_digits(n):
-    # TODO: Return the sum of digits of positive integer 'n'.
-    # For example, sum_digits(123) should return 6 (1 + 2 + 3).
+      starterCode: `def sum_digits(num):
+    # TODO: Sum the absolute digits of the integer 'num' and return the result.
+    # For example, 123 returns 6. -45 returns 9.
     pass
 `,
-      solutionCode: `def sum_digits(n):
-    return sum(int(digit) for digit in str(n))
+      solutionCode: `def sum_digits(num):
+    return sum(int(digit) for digit in str(abs(num)))
 `,
-      instructions: `### Interactive Lab: Iteration with For Loops
+      instructions: `### Interactive Lab: Iterating with For Loops
 
-Implement \`sum_digits(n)\` in Python:
-1. Convert the number to a string to access individual characters (digits).
-2. Loop over each digit, cast it back to an integer, and sum them.
-3. Return the total sum.`,
+Loops allow you to iterate over sequences. Write a function \`sum_digits(num)\` that:
+1. Converts the absolute value of integer \`num\` into digits.
+2. Iterates over the digits using a \`for\` loop.
+3. Computes and returns their sum.`,
       testCode: `
 try:
     if 'sum_digits' not in globals():
         raise NameError("Function sum_digits is not defined")
     cases = [
-        { "n": 123, "expected": 6 },
-        { "n": 405, "expected": 9 },
-        { "n": 9, "expected": 9 }
+        { "input": 123, "expected": 6 },
+        { "input": -45, "expected": 9 },
+        { "input": 0, "expected": 0 }
     ]
     passed_count = 0
     for idx, c in enumerate(cases):
-        act = sum_digits(c["n"])
+        act = sum_digits(c["input"])
         passed = act == c["expected"]
         if passed: passed_count += 1
         print(f"[TEST_CASE] {idx} | {'PASS' if passed else 'FAIL'} | Actual: {act}")
@@ -406,24 +611,22 @@ except Exception as e:
     "Defining Functions": {
       title: "Lab - Prime Number Checker",
       starterCode: `def is_prime(n):
-    # TODO: Return True if 'n' is a prime number, otherwise False.
-    # Note: prime numbers are integers greater than 1 with no divisors other than 1 and themselves.
+    # TODO: Return True if n is a prime number, otherwise False.
+    # Prime numbers are integers greater than 1 that have no positive divisors other than 1 and themselves.
     pass
 `,
       solutionCode: `def is_prime(n):
-    if n <= 1:
-        return False
+    if n <= 1: return False
     for i in range(2, int(n**0.5) + 1):
-        if n % i == 0:
-            return False
+        if n % i == 0: return False
     return True
 `,
       instructions: `### Interactive Lab: Defining Custom Functions
 
-Write a function \`is_prime(n)\` that:
-1. Returns \`False\` if \`n\` is less than or equal to \`1\`.
-2. Loops from \`2\` up to the square root of \`n\` (inclusive) and checks if any number divides \`n\` evenly.
-3. Returns \`False\` if a divisor is found, otherwise \`True\`.`,
+Write a prime number checker function \`is_prime(n)\` that:
+1. Returns \`False\` for values less than or equal to 1.
+2. Uses loop math to search for positive divisors between 2 and the square root of \`n\`.
+3. Returns \`True\` if no divisors are found.`,
       testCode: `
 try:
     if 'is_prime' not in globals():
@@ -452,34 +655,33 @@ except Exception as e:
     },
     "try statement": {
       title: "Lab - Safe Division Exceptions",
-      starterCode: `def safe_divide(a, b):
-    # TODO: Return a / b.
-    # Handle ZeroDivisionError by returning None.
+      starterCode: `def safe_divide(x, y):
+    # TODO: Divide x by y. Catch ZeroDivisionError and return "division_by_zero_error".
+    # Return the float result if successful.
     pass
 `,
-      solutionCode: `def safe_divide(a, b):
+      solutionCode: `def safe_divide(x, y):
     try:
-        return a / b
+        return x / y
     except ZeroDivisionError:
-        return None
+        return "division_by_zero_error"
 `,
-      instructions: `### Interactive Lab: Error Handling
+      instructions: `### Interactive Lab: Exception Handling
 
-Write a function \`safe_divide(a, b)\` to gracefully handle division by zero:
-1. Wrap the division operation in a \`try\` block.
-2. Catch \`ZeroDivisionError\` and return \`None\`.
-3. Return the result of \`a / b\` on success.`,
+Handle potential runtime crashes using try-except structures. Write a function \`safe_divide(x, y)\` that:
+1. Performs division \`x / y\`.
+2. Catches \`ZeroDivisionError\` if \`y\` is 0 and returns \`"division_by_zero_error"\`.`,
       testCode: `
 try:
     if 'safe_divide' not in globals():
         raise NameError("Function safe_divide is not defined")
     cases = [
-        { "a": 10, "b": 2, "expected": 5.0 },
-        { "a": 10, "b": 0, "expected": None }
+        { "x": 10, "y": 2, "expected": 5.0 },
+        { "x": 10, "y": 0, "expected": "division_by_zero_error" }
     ]
     passed_count = 0
     for idx, c in enumerate(cases):
-        act = safe_divide(c["a"], c["b"])
+        act = safe_divide(c["x"], c["y"])
         passed = act == c["expected"]
         if passed: passed_count += 1
         print(f"[TEST_CASE] {idx} | {'PASS' if passed else 'FAIL'} | Actual: {act}")
@@ -495,39 +697,37 @@ except Exception as e:
     },
     "Constructors": {
       title: "Lab - Person Class Initialization",
-      starterCode: `class Person:
-    def __init__(self, name, age):
-        # TODO: Assign parameter values to instance variables
-        pass
-        
-    def greet(self):
-        # TODO: Return greeting string: "Hello, my name is [name] and I am [age] years old."
-        pass
+      starterCode: `# Define a Person class with constructor __init__
+
+class Person:
+    # TODO: Write constructor taking name and age parameters.
+    # TODO: Write a get_greeting method returning "Hello, my name is [name] and I am [age] years old."
+    pass
 `,
       solutionCode: `class Person:
     def __init__(self, name, age):
         self.name = name
         self.age = age
-        
-    def greet(self):
+    def get_greeting(self):
         return f"Hello, my name is {self.name} and I am {self.age} years old."
 `,
-      instructions: `### Interactive Lab: Object Oriented Constructors
+      instructions: `### Interactive Lab: Classes and Constructors
 
-Practice constructor initialization by completing the \`Person\` class:
-1. Implement the \`__init__\` constructor to set instance variables \`self.name\` and \`self.age\`.
-2. Implement the \`greet\` method to return a string of the format: \`"Hello, my name is [name] and I am [age] years old."\``,
+Constructors initialize objects. Complete the \`Person\` class:
+1. Write \`__init__(self, name, age)\` saving parameters to instance variables.
+2. Write \`get_greeting(self)\` formatting a name and age output string.`,
       testCode: `
 try:
     if 'Person' not in globals():
         raise NameError("Class Person is not defined")
-    p = Person("Alice", 25)
-    passed = p.name == "Alice" and p.age == 25 and p.greet() == "Hello, my name is Alice and I am 25 years old."
-    print(f"[TEST_CASE] 0 | {'PASS' if passed else 'FAIL'} | Actual: {p.greet()}")
+    p = Person("Aarav", 22)
+    act = p.get_greeting()
+    passed = act == "Hello, my name is Aarav and I am 22 years old."
+    print(f"[TEST_CASE] 0 | {'PASS' if passed else 'FAIL'} | Actual: {act}")
     if passed:
         print("TEST_RESULTS: 1/1 passed")
     else:
-        print("TEST_FAILURE: 1 test case failed")
+        print("TEST_FAILURE: Output does not match expected format")
 except Exception as e:
     import sys
     print(f"TEST_FAILURE: {e}", file=sys.stderr)
@@ -536,54 +736,27 @@ except Exception as e:
     }
   };
 
-  // 4. Seeding Logic: Iterate over modules and lessons
   let totalStepsSeeded = 0;
   let totalAssignmentsSeeded = 0;
 
   for (const mod of modules) {
     console.log(`Processing Module: "${mod.title}"...`);
     for (const les of mod.lessons) {
-      // Find if we have a lab defined for this lesson title
       const labConfig = labsMap[les.title];
-
-      // Filter existing steps
-      const hasTextStep = les.steps.some(s => s.stepType === LessonStepType.text || s.stepType === LessonStepType.intro);
+      
+      const hasTextStep = les.steps.some(s => s.stepType === LessonStepType.text);
       const hasLabStep = les.steps.some(s => s.stepType === LessonStepType.lab);
 
-      // A. If a lab is configured and doesn't exist, seed the Lab Step AND Text Step
+      // A. Seed Coding Lab Step
       if (labConfig && !hasLabStep) {
         console.log(`  Seeding Lab for Lesson: "${les.title}"`);
-        
-        // 1. Text Step (Conceptual overview of the lab topic)
-        const textStepId = makeStepId(les.id, 'text');
-        await prisma.lessonStep.upsert({
-          where: { id: textStepId },
-          update: {},
-          create: {
-            id: textStepId,
-            lessonId: les.id,
-            stepType: LessonStepType.text,
-            sortOrder: 1,
-            title: `Step 1: Introduction to ${les.title}`,
-            textContent: `# Understanding ${les.title}
-In this step, we cover the core concepts behind **${les.title}** so that you can complete the subsequent coding lab exercise.
-
-### Concept Overview
-Every programmer needs to master **${les.title}**. Make sure you review:
-1. Syntax correctness.
-2. Common edge cases and performance considerations.
-3. Practical application examples.
-
-Next, click on the **Coding Lab** step to test your skills in the compiler terminal!`
-          }
-        });
-        totalStepsSeeded++;
-
-        // 2. Coding Lab Step
         const labStepId = makeStepId(les.id, 'lab');
+        
         await prisma.lessonStep.upsert({
           where: { id: labStepId },
-          update: {},
+          update: {
+            textContent: generatePythonTextbookContent(les.title, mod.title)
+          },
           create: {
             id: labStepId,
             lessonId: les.id,
@@ -595,6 +768,7 @@ Next, click on the **Coding Lab** step to test your skills in the compiler termi
             labSolutionCode: labConfig.solutionCode,
             labInstructions: labConfig.instructions,
             labTestCode: { python: labConfig.testCode },
+            textContent: generatePythonTextbookContent(les.title, mod.title),
             metadata: {
               examples: [
                 { input: "See instructions", output: "Matches verification rules" }
@@ -628,77 +802,18 @@ Next, click on the **Coding Lab** step to test your skills in the compiler termi
         console.log(`  Seeding Text Step for Lesson: "${les.title}"`);
         const textStepId = makeStepId(les.id, 'text');
         
-        // Generate content based on module title
-        let explanation = '';
-        if (mod.title.includes('Introduction')) {
-          explanation = `*   **Python Characteristics**: Simple syntax, interpreted, dynamically typed, and multi-paradigm.
-*   **Significance**: Used in Web Dev, Data Science, DevOps, Scripting, and AI.
-*   **Execution Model**: Source Code (.py) -> Bytecode (.pyc) -> Python Virtual Machine (PVM).`;
-        } else if (mod.title.includes('Variables')) {
-          explanation = `*   **Variables**: Pointers to memory locations that hold references to objects (variables do not store values directly in Python).
-*   **Dynamic Typing**: You don't declare types. Variables change types on reallocation (e.g. \`x = 10\`, then \`x = "ten"\`).
-*   **Naming Rules**: Use snake_case, start with a letter or underscore, and avoid reserved keywords.`;
-        } else if (mod.title.includes('Operators')) {
-          explanation = `*   **Operators**: Arithmetic (\`+\`, \`-\`, \`*\`, \`/\`, \`//\`, \`%\`, \`**\`), Assignment (\`=\`, \`+=\`), Comparison (\`==\`, \`!=\`, \`>\`), and Logical (\`and\`, \`or\`, \`not\`).
-*   **Precedence**: PEMDAS rules govern arithmetic orders.
-*   **Membership & Identity**: Use \`in\` and \`not in\` for sequences, and \`is\` / \`is not\` for memory reference comparison.`;
-        } else if (mod.title.includes('Strings')) {
-          explanation = `*   **Strings**: Immutable sequences of characters defined with single, double, or triple quotes.
-*   **Indexing & Slicing**: \`s[start:stop:step]\` format. Python supports negative indexing (\`s[-1]\` is the last character).
-*   **Formatting**: Clean layouts using formatted literals: \`f"Hello {name}"\`.`;
-        } else if (mod.title.includes('Collections')) {
-          explanation = `*   **Lists**: Ordered, mutable, dynamic sequences: \`my_list = [1, 2, 3]\`.
-*   **Tuples**: Ordered, immutable sequences: \`my_tuple = (1, 2)\`.
-*   **Sets**: Unordered collection of unique items: \`my_set = {1, 2, 3}\`.
-*   **Dictionaries**: Key-value pairs matching unique hashing keys to values: \`my_dict = {"key": "val"}\`.`;
-        } else if (mod.title.includes('Control Flow') || mod.title.includes('Loops')) {
-          explanation = `*   **Conditionals**: Execute blocks dynamically using \`if\`, \`elif\`, \`else\`, or \`match-case\`.
-*   **Loops**: Iterate over lists/sequences using \`for\`, or repeat steps while conditions hold using \`while\`.
-*   **Keywords**: Use \`break\` to terminate loops early, \`continue\` to skip iterations, or \`pass\` as placeholders.`;
-        } else if (mod.title.includes('Functions')) {
-          explanation = `*   **Defining Functions**: Use \`def function_name(params):\` and return values using \`return\`.
-*   **Arguments**: Supports positional, keyword, default values, and variable-length arguments (\`*args\` and \`**kwargs\`).
-*   **Scope**: Local vs. Global scopes governed by namespace rules.`;
-        } else if (mod.title.includes('Exception')) {
-          explanation = `*   **Error Handling**: Protect applications from crashes using \`try\`, \`except\`, \`else\`, and \`finally\` structures.
-*   **Assertions & Raising**: Throw exceptions intentionally using \`raise Exception("details")\`.
-*   **Custom Classes**: Subclass \`Exception\` to implement domain-specific checks.`;
-        } else {
-          explanation = `*   **Classes**: Blueprints to construct custom objects: \`class Dog:\`.
-*   **Inheritance**: Subclass elements to reuse attributes: \`class GermanShepherd(Dog):\`.
-*   **OOP Pillars**: Inheritance, Polymorphism (method override), Encapsulation (private variables \`__attr\`), and Abstraction.`;
-        }
-
         await prisma.lessonStep.upsert({
           where: { id: textStepId },
-          update: {},
+          update: {
+            textContent: generatePythonTextbookContent(les.title, mod.title)
+          },
           create: {
             id: textStepId,
             lessonId: les.id,
             stepType: LessonStepType.text,
             sortOrder: 1,
             title: `Step 1: Understanding ${les.title}`,
-            textContent: `# Introduction to ${les.title}
-
-In this lesson, we will focus on understanding **${les.title}** and how to use it inside Python projects.
-
-### Key Concepts:
-${explanation}
-
-### Python Syntax Example:
-\`\`\`python
-# Practical example of ${les.title}
-def demonstrate_concept():
-    # Example logic demonstrating how this works in real projects
-    print("Concept: ${les.title}")
-
-demonstrate_concept()
-\`\`\`
-
-### Guidelines:
-1. Practice writing this code structure in a local Python shell.
-2. Be mindful of correct indentation rules (Python uses 4 spaces by default).
-3. Resolve syntax errors immediately to keep execution stable.`
+            textContent: generatePythonTextbookContent(les.title, mod.title)
           }
         });
         totalStepsSeeded++;
@@ -706,14 +821,14 @@ demonstrate_concept()
     }
   }
 
-  console.log(`\n🎉 Python Course Seeding Completed!`);
+  console.log('🎉 Python Course Seeding Completed!');
   console.log(`Seeded ${totalStepsSeeded} new Lesson Steps.`);
   console.log(`Seeded ${totalAssignmentsSeeded} new Assignments.`);
 }
 
 main()
   .catch((e) => {
-    console.error('Error seeding Python course:', e);
+    console.error(e);
     process.exit(1);
   })
   .finally(async () => {

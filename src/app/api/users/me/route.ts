@@ -28,9 +28,12 @@ export async function GET() {
       return apiError('Unauthorized', 401);
     }
 
-    // Fetch enrollments with course details
+    // Fetch enrollments with course details (both active and completed)
     const enrollments = await prisma.enrollment.findMany({
-      where: { userId: dbUser.id, status: 'active' },
+      where: {
+        userId: dbUser.id,
+        status: { in: ['active', 'completed'] },
+      },
       select: { courseId: true },
     });
 
