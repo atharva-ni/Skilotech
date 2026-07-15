@@ -1,75 +1,246 @@
-.welcomeBanner {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-xl);
-  padding: var(--spacing-2xl);
+/* ============================================
+   EXACT WORKSPACE REDESIGN - Target UI Mockup
+   Linear / Notion / Vercel Aesthetic
+   ============================================ */
+
+.dashboardContainer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-xl);
-  position: relative;
-  overflow: hidden;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  padding-top: 8px;
 }
 
-.welcomeBanner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--accent-gradient);
+/* ---- Top Grid ---- */
+.topGrid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 28px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .topGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Left Column Layout Wrapper ---- */
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ---- Welcome Card ---- */
+.welcomeCard {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--bg-card);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  gap: 24px;
+  min-height: 220px;
+}
+
+.welcomeContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.welcomeTitleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .welcomeTitle {
-  font-size: var(--font-size-2xl);
-  font-weight: 800;
-  margin-bottom: var(--spacing-sm);
-  letter-spacing: -0.01em;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.025em;
 }
 
 .welcomeSubtitle {
-  font-size: var(--font-size-base);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.heroActionGroup {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.playBtn {
+  background: #000000;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.playBtn:hover {
+  background: #171717;
+}
+
+.playBtn svg {
+  fill: currentColor;
+}
+
+.outlineBtn {
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.outlineBtn:hover {
+  background: #f9fafb;
+}
+
+/* Hero middle section: metadata */
+.heroMiddleGrid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  border-top: 1px solid var(--border-primary);
+  border-bottom: 1px solid var(--border-primary);
+  padding: 16px 0;
+}
+
+.heroMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heroMetaLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.heroMetaValue {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heroMetaSub {
+  font-size: 11px;
   color: var(--text-secondary);
 }
 
-.welcomeArt {
-  font-size: 3rem;
-  opacity: 0.3;
+/* Hero Footer actions */
+.welcomeFooter {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
 }
 
+.targetList {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.targetItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.targetItem svg {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* ---- Primary Stats KPI Cards Grid ---- */
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-base);
-  margin-bottom: var(--spacing-xl);
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .statCard {
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
+  padding: 16px;
   display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-base);
-  transition: all var(--transition-base);
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .statCard:hover {
-  border-color: var(--border-secondary);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
-.statIcon {
-  font-size: 1.5rem;
-  width: 48px;
-  height: 48px;
+.statIconContainer {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f3f4f6;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-glass);
-  border-radius: var(--radius-md);
+  color: #000000;
+  flex-shrink: 0;
+}
+
+.statIconContainerBlack {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
   flex-shrink: 0;
 }
 
@@ -78,222 +249,967 @@
   flex-direction: column;
 }
 
-.statValue {
-  font-size: var(--font-size-2xl);
-  font-weight: 800;
-  line-height: 1;
-  margin-bottom: 2px;
+.statNum {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
-.statLabel {
-  font-size: var(--font-size-sm);
+.statTitle {
+  font-size: 11px;
   color: var(--text-secondary);
-  margin-bottom: 2px;
+  font-weight: 500;
+  margin-top: 2px;
 }
 
-.statTrend {
-  font-size: var(--font-size-xs);
-  color: var(--success);
+.statSubtext {
+  font-size: 9.5px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+  font-weight: 500;
 }
 
-.section {
-  margin-bottom: var(--spacing-xl);
+/* ---- Continue Learning Section ---- */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
 
-.courseGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-base);
+.sectionTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.courseCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: all var(--transition-base);
+.viewAllLink {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
   text-decoration: none;
-  color: inherit;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.courseCard:hover {
-  border-color: var(--border-accent);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+.viewAllLink:hover {
+  color: var(--text-primary);
 }
 
-.courseThumbnail {
-  height: 120px;
-  background: var(--bg-tertiary);
+.courseCardHorizontal {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  background: var(--bg-card);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+}
+
+.courseCardHorizontal:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.courseThumbnailWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.courseThumbnailBlock {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #ffffff;
+  font-size: 20px;
 }
 
-.courseEmoji {
-  font-size: 3rem;
-  opacity: 0.6;
+.courseMainInfo {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
-.courseInfo {
-  padding: var(--spacing-base);
-}
-
-.courseCategory {
-  font-size: var(--font-size-xs);
-  color: var(--accent-primary-hover);
-  font-weight: 600;
-  text-transform: uppercase;
+.courseMeta {
+  font-size: 9.5px;
+  font-weight: 700;
   letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
 }
 
 .courseTitle {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  margin: var(--spacing-xs) 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 3px 0;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.courseInstructor {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-  margin-bottom: var(--spacing-md);
-}
-
-.progressSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
-}
-
-.progressLabel {
-  font-size: var(--font-size-xs);
+.courseLesson {
+  font-size: 11.5px;
   color: var(--text-secondary);
-  text-align: right;
+  font-weight: 500;
 }
 
-.assignmentList {
+.courseProgressLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.courseProgressSection {
+  flex: 1.5;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
+  align-items: stretch;
+  gap: 6px;
+  min-width: 180px;
 }
 
-.assignmentItem {
+.progressInfoRow {
   display: flex;
   align-items: center;
-  gap: var(--spacing-base);
-  padding: var(--spacing-base) var(--spacing-lg);
+  gap: 6px;
+  font-size: 11px;
+}
+
+.courseProgressPercent {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dotDivider {
+  color: var(--text-tertiary);
+}
+
+.progressTrack {
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: #000000;
+  border-radius: 2px;
+}
+
+.timeRemainingText {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.resumeBtn {
+  background: #000000;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 11.5px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.resumeBtn:hover {
+  background: #171717;
+}
+
+/* ---- Recent AI Feedback (Overhauled Layout) ---- */
+.aiFeedbackContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aiProgressCard {
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-xl);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-sm);
 }
 
-.assignmentItem:hover {
-  border-color: var(--border-secondary);
+.aiHeader {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
 }
 
-.assignmentIcon {
-  font-size: 1.25rem;
+.terminalIconBox {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: 8px;
   width: 40px;
   height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-glass);
-  border-radius: var(--radius-md);
+  color: #16a34a;
   flex-shrink: 0;
 }
 
-.assignmentInfo {
+.aiHeaderText {
   flex: 1;
 }
 
-.assignmentTitle {
-  font-size: var(--font-size-sm);
+.aiHeaderTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.aiHeaderSubtitle {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.aiProgressBody {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.feedbackItemBordered {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: transform 0.2s ease;
+}
+
+.feedbackItemBordered:hover {
+  transform: translateX(2px);
+}
+
+.borderGreen {
+  border-left: 4px solid #16a34a;
+}
+
+.borderOrange {
+  border-left: 4px solid #f97316;
+}
+
+.borderBlue {
+  border-left: 4px solid #3b82f6;
+}
+
+.itemIcon {
+  font-size: 13px;
+  line-height: 1.5;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.iconGreen { color: #16a34a; }
+.iconOrange { color: #f97316; }
+.iconBlue { color: #3b82f6; }
+
+.itemText {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ---- Right Sidebar Widgets ---- */
+.sideStack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Learning Streak Widget */
+.streakCard {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.streakHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.streakTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.streakValueBadge {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.heatmapContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.heatmapMain {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.weekdayLabels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 102px;
+  padding: 0;
+  text-align: right;
+  width: 24px;
+}
+
+.weekdayLabels span {
+  font-size: 9.5px;
+  color: var(--text-tertiary);
+  height: 12px;
+  line-height: 12px;
+  font-weight: 500;
+}
+
+.heatmapGrid {
+  display: grid;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-flow: column;
+  gap: 3px;
+  width: fit-content;
+}
+
+.heatmapCell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.heatmapCell0 { background: #f3f4f6; }
+.heatmapCell1 { background: #e5e7eb; }
+.heatmapCell2 { background: #9ca3af; }
+.heatmapCell3 { background: #4b5563; }
+.heatmapCell4 { background: #111827; }
+
+.heatmapLegend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 9.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.heatmapLegendColors {
+  display: flex;
+  align-items: center;
+  gap: 2.5px;
+}
+
+.streakMetaRow {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-secondary);
+  padding-top: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.streakMetaItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.streakMetaVal {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.streakLabel {
+  font-size: 10.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Weekly Progress Widget */
+.progressCard {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.progressHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.progressTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.progressDuration {
+  font-size: 11px;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
-.assignmentCourse {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
-}
-
-.assignmentMeta {
+.activityChart {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.activityInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-secondary);
+  padding-bottom: 8px;
+}
+
+.activityMetric {
+  display: flex;
+  flex-direction: column;
+}
+
+.activityMetricVal {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.activityMetricLabel {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.barChartRow {
+  display: flex;
   align-items: flex-end;
-  gap: var(--spacing-xs);
+  justify-content: space-between;
+  gap: 8px;
+  height: 48px;
+  padding-top: 4px;
 }
 
-.assignmentDue {
-  font-size: var(--font-size-xs);
-  color: var(--text-tertiary);
+.chartBarContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 4px;
 }
 
-.aiFeedbackCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border-primary);
-  border-radius: var(--radius-lg);
+.chartBarTrack {
+  width: 100%;
+  max-width: 10px;
+  height: 48px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  position: relative;
   overflow: hidden;
 }
 
-.aiHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-base);
-  padding: var(--spacing-base) var(--spacing-lg);
-  border-bottom: 1px solid var(--border-primary);
+.chartBarFill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #111827;
+  border-radius: 3px;
 }
 
-.aiHeader h4 {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
+.chartBarLabel {
+  font-size: 9px;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
-.aiIcon {
-  font-size: 1.25rem;
-}
-
-.aiHeader > div {
-  flex: 1;
-}
-
-.aiBody {
-  padding: var(--spacing-lg);
+/* Todo List Widget */
+.todoCard {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-sm);
-  font-size: var(--font-size-sm);
+  gap: 14px;
+}
+
+.todoHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.todoTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.addTaskBtn {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid var(--border-primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.2s ease;
+}
+
+.addTaskBtn:hover {
+  background: #f9fafb;
+}
+
+.todoList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.todoItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
+.todoLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.todoCheckbox {
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1.5px solid #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  background: transparent;
+}
+
+.todoCheckboxCompleted {
+  background: #000000;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+.todoText {
+  font-size: 12.5px;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.todoTextCompleted {
   color: var(--text-secondary);
-  line-height: 1.6;
+  text-decoration: line-through;
+  opacity: 0.65;
 }
 
-@media (max-width: 1200px) {
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .courseGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.todoRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-@media (max-width: 768px) {
-  .statsGrid,
-  .courseGrid {
-    grid-template-columns: 1fr;
-  }
+.timeBadge {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 
-  .welcomeBanner {
-    padding: var(--spacing-lg);
-  }
+.ellipsisBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  opacity: 0.7;
+}
 
-  .welcomeArt {
-    display: none;
-  }
+.ellipsisBtn:hover {
+  opacity: 1;
+}
+
+.todoProgress {
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-secondary);
+  padding-top: 10px;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.todoInputRow {
+  margin-bottom: 12px;
+}
+
+.todoInput {
+  width: 100%;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.todoInput:focus {
+  border-color: #000000;
+}
+
+.todoActionBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.todoActionBtn:hover {
+  background: #f1f5f9;
+  color: var(--text-primary);
+}
+
+.todoEditForm {
+  width: 100%;
+  display: flex;
+}
+
+.todoEditInput {
+  width: 100%;
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12.5px;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+}
+
+.todoEditInput:focus {
+  border-color: #000000;
+}
+
+/* Available Jobs Widget */
+.jobsCard {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jobsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.jobsTitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.jobsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.jobItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f9fafb;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.jobItem:hover {
+  transform: translateX(2px);
+  background: #f1f5f9;
+}
+
+.jobLogoBlock {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.jobInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.jobItemTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobItemMeta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jobItemSalary {
+  font-size: 10px;
+  color: var(--text-tertiary);
+}
+
+.jobChevron {
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.jobsFooter {
+  border-top: 1px solid var(--border-secondary);
+  padding-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.jobsFooterLink {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.jobsFooterLink:hover {
+  color: var(--text-primary);
+}
+
+.sideStackRow {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.communityMiniCard {
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.communityHubLink {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  transition: color 0.2s ease;
+}
+
+.communityHubLink:hover {
+  color: var(--text-primary);
+}
+
+.communityFeedList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.communityFeedItem {
+  border-bottom: 1px solid var(--border-secondary);
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.communityFeedItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.postAuthorRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.authorAvatar {
+  font-size: 11px;
+}
+
+.authorName {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.postSnippet {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.postFooterMeta {
+  display: flex;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.communityEmptyState {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
 }
