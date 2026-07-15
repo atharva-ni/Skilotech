@@ -29,7 +29,7 @@ interface NavItem {
 
 // Map roles to Lucide icons for premium aesthetics
 const navConfig: Record<UserRole, (collapsed: boolean) => NavItem[]> = {
-  student: (c) => [
+  student: () => [
     { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={18} /> },
     { label: 'Courses', href: '/dashboard/courses', icon: <BookOpen size={18} /> },
     { label: 'My Learning', href: '/dashboard/my-learning', icon: <Milestone size={18} /> },
@@ -37,18 +37,18 @@ const navConfig: Record<UserRole, (collapsed: boolean) => NavItem[]> = {
     { label: 'Jobs', href: '/dashboard/jobs', icon: <Briefcase size={18} /> },
     { label: 'Community', href: '/dashboard/community', icon: <MessageSquare size={18} /> },
   ],
-  instructor: (c) => [
+  instructor: () => [
     { label: 'Dashboard', href: '/dashboard/instructor', icon: <LayoutDashboard size={18} /> },
     { label: 'My Courses', href: '/dashboard/instructor/courses', icon: <BookOpen size={18} /> },
     { label: 'Assignments', href: '/dashboard/instructor/assignments', icon: <FileSpreadsheet size={18} /> },
     { label: 'Community', href: '/dashboard/community', icon: <MessageSquare size={18} /> },
   ],
-  recruiter: (c) => [
+  recruiter: () => [
     { label: 'Dashboard', href: '/dashboard/recruiter', icon: <LayoutDashboard size={18} /> },
     { label: 'Job Postings', href: '/dashboard/recruiter/jobs', icon: <FileSpreadsheet size={18} /> },
     { label: 'Applicants', href: '/dashboard/recruiter/applicants', icon: <Users size={18} /> },
   ],
-  admin: (c) => [
+  admin: () => [
     { label: 'Dashboard', href: '/dashboard/admin', icon: <LayoutDashboard size={18} /> },
     { label: 'Users', href: '/dashboard/admin/users', icon: <Users size={18} /> },
     { label: 'Courses', href: '/dashboard/admin/courses', icon: <BookOpen size={18} /> },

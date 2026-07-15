@@ -1578,132 +1578,349 @@
   line-height: 1.65;
 }
 
-/* Modern Grid layout for Timeline + Pinned Panels */
+/* Premium Three-Column Layout for Skilotech Workflow (Minimal Black & White) */
 .workflowGrid {
   display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 40px;
+  grid-template-columns: 16% 46% 38%;
+  gap: 32px;
   width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   position: relative;
+  z-index: 2;
+  align-items: center;
+}
+
+/* Background grid pattern */
+.gridBg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* Column 1: Vertical Interactive Timeline */
+.timelineCol {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  padding: 16px 0;
+  height: 400px;
   z-index: 2;
 }
 
-/* Vertical Timeline styles */
-.timelineColumn {
-  position: relative;
-  width: 60px;
-  height: 380px;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.timelineTrack {
+.timelineTrackLine {
   position: absolute;
-  top: 15px;
-  bottom: 15px;
-  width: 3px;
+  left: 20px;
+  top: 24px;
+  bottom: 24px;
+  width: 2px;
   background: rgba(0, 0, 0, 0.05);
-  border-radius: 2px;
   z-index: 1;
 }
 
-.timelineProgress {
-  position: absolute;
-  top: 15px;
-  width: 3px;
-  background: linear-gradient(to bottom, #6366f1, #a855f7);
-  border-radius: 2px;
-  z-index: 2;
-  height: 0%;
+.timelineProgressLine {
+  width: 100%;
+  background: #171717; /* Minimal Solid Black progress line */
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: top;
 }
 
-.timelineNode {
-  width: 36px;
-  height: 36px;
+.timelineStepButton {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  outline: none;
+  z-index: 2;
+  padding: 8px 0;
+  transition: transform 0.2s ease;
+  width: 100%;
+}
+
+.timelineStepButton:hover {
+  transform: translateX(4px);
+}
+
+.stepNode {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3;
-  transition: all 0.3s ease;
-  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
 }
 
-.nodeIndex {
-  font-family: monospace;
-  font-size: 11px;
-  font-weight: 750;
-  color: var(--text-tertiary);
+.activeDotNode {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #171717; /* Black dot */
+  box-shadow: 0 0 10px rgba(23, 23, 23, 0.3);
+  animation: dotPulse 2s infinite ease-in-out;
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+.inactiveDotNode {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.checkmarkIcon {
+  font-size: 14px;
+  font-weight: 900;
+  color: #171717; /* Neutral Black checkmark */
+}
+
+.stepLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #737373;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
   transition: color 0.3s ease;
 }
 
-/* Beautiful dynamic ambient lights */
-.ambientLight {
-  position: absolute;
-  width: 700px;
-  height: 700px;
-  border-radius: 50%;
-  filter: blur(140px);
-  opacity: 0.8;
-  pointer-events: none;
-  transition: background 0.8s ease-in-out;
-  z-index: 1;
+.timelineStepActive .stepLabel {
+  color: #171717;
 }
 
-.ambientLightLeft {
-  top: -10%;
-  left: -15%;
+.timelineStepActive .stepNode {
+  border-color: #171717;
+  background: #f4f4f5;
+  box-shadow: 0 0 0 4px rgba(23, 23, 23, 0.08);
 }
 
-.ambientLightRight {
-  bottom: -15%;
-  right: -15%;
+.timelineStepCompleted .stepLabel {
+  color: #737373;
 }
 
-.desktopWorkflow {
-  display: block;
+.timelineStepCompleted .stepNode {
+  border-color: #e5e7eb;
+  background: #f4f4f5;
+}
+
+/* Column 2: Large Visual Card (High Contrast) */
+.visualCol {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
 }
 
+.premiumVisualCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.01);
+  width: 100%;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.premiumVisualCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.01));
+  z-index: 0;
+  pointer-events: none;
+}
+
+.premiumVisualCard > * {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* Column 3: Information Card */
+.contentCol {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.premiumContentCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.01);
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Left vertical accent line on content card (solid black) */
+.premiumContentCard::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: #171717; /* Minimal black accent bar */
+}
+
+/* Progress indicator inside card */
+.progressIndicatorBox {
+  margin-bottom: 28px;
+  width: 100%;
+}
+
+.progressTextRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progressEyebrow {
+  font-size: 10px;
+  font-weight: 750;
+  color: #171717;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.percentText {
+  font-size: 11px;
+  font-weight: 600;
+  color: #737373;
+}
+
+.progressMeterBar {
+  width: 100%;
+  height: 6px;
+  background: #f4f4f5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressMeterFill {
+  height: 100%;
+  background: #171717; /* Solid Black progress fill */
+  border-radius: 3px;
+}
+
+.stepEyebrowLabel {
+  font-size: 10px;
+  font-weight: 800;
+  color: #a3a3a3;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.stepTitleLabel {
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: #171717;
+  margin-bottom: 16px;
+  font-family: var(--font-syne), sans-serif;
+}
+
+.stepDescLabel {
+  font-size: 0.9375rem;
+  color: #525252;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* Mobile Workflow layout */
 .mobileWorkflow {
   display: none;
 }
 
 @media (max-width: 1024px) {
-  .desktopWorkflow {
+  .workflowGrid {
     display: none;
   }
 
   .mobileWorkflow {
     display: flex;
     flex-direction: column;
-    gap: 48px;
+    gap: 40px;
     width: 100%;
+    margin-top: 16px;
   }
 
   .mobileStepCard {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    border-radius: 24px;
+    border: 1px solid #e5e7eb;
+    border-radius: 20px;
     padding: 32px 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.015);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.02);
+  }
+
+  .mobileStepHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mobileStepNum {
+    font-size: 10px;
+    font-weight: 850;
+    color: #171717;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #f4f4f5;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    align-self: flex-start;
+  }
+
+  .mobileStepTitle {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #171717;
+    letter-spacing: -0.5px;
   }
 
   .mobileStepCard .panelVisual {
     height: auto !important;
     padding: 24px !important;
     background: #fafafa !important;
-    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 16px !important;
   }
 
   .mobileStepCard .panelText {
@@ -1715,29 +1932,6 @@
   }
 
   .mobileStepCard .panelText::before {
-    display: none;
-  }
-
-  .workflowGrid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .timelineColumn {
-    display: none; /* Hide timeline progress bar on mobile */
-  }
-
-  .panelVisual {
-    height: auto !important;
-    padding: 32px 24px;
-  }
-  
-  .panelText {
-    height: auto !important;
-    padding: 32px 24px;
-  }
-  
-  .panelVisual::before {
     display: none;
   }
 }

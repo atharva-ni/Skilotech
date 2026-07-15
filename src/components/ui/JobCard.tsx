@@ -48,7 +48,7 @@ export default function JobCard({
     }
   };
 
-  const getSpotlightColor = (t: string) => {
+  const getSpotlightColor = () => {
     return 'rgba(0, 0, 0, 0.012)';
   };
 
@@ -76,7 +76,7 @@ export default function JobCard({
           style={{
             position: 'absolute',
             inset: 0,
-            background: `radial-gradient(300px circle at ${mousePosition.x}px ${mousePosition.y}px, ${getSpotlightColor(type)}, transparent 80%)`,
+            background: `radial-gradient(300px circle at ${mousePosition.x}px ${mousePosition.y}px, ${getSpotlightColor()}, transparent 80%)`,
             pointerEvents: 'none',
             zIndex: 0,
           }}

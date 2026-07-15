@@ -33,13 +33,15 @@ export default function RecruiterDashboard() {
         const appsData = await appsRes.json();
         setJobs(Array.isArray(jobsData) ? jobsData : []);
         setApplications(Array.isArray(appsData) ? appsData : []);
-      } catch (err: any) {
+      } catch {
         toast.error('Failed to load dashboard metrics');
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    Promise.resolve().then(() => {
+      fetchData();
+    });
   }, []);
 
   const activeJobsCount = jobs.filter(j => j.status === 'active').length;

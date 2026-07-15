@@ -15,7 +15,6 @@ export default function AdminDashboard() {
     totalCourses: 0,
     pendingCourses: 0,
   });
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
@@ -33,11 +32,11 @@ export default function AdminDashboard() {
         setStats({ totalUsers: 0, totalCourses, pendingCourses });
       } catch (err) {
         console.error('Failed to load admin stats:', err);
-      } finally {
-        setLoading(false);
       }
     }
-    fetchStats();
+    Promise.resolve().then(() => {
+      fetchStats();
+    });
   }, []);
 
   const recentPayments = payments.slice(0, 4);

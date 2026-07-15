@@ -1,15 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import Badge from '@/components/ui/Badge';
-import Button from '@/components/ui/Button';
 import SearchFilter from '@/components/ui/SearchFilter';
-// Line 9-12 imports
 import { 
-  Briefcase, MapPin, IndianRupee, Calendar, FileText, CheckCircle2, 
-  Clock, AlertCircle, X, Users, Sparkles, Send, Link as LinkIcon 
+  MapPin, IndianRupee, CheckCircle2, Clock, X, Link as LinkIcon 
 } from 'lucide-react';
 
 const enumToJobType: Record<string, string> = {
@@ -27,8 +23,6 @@ const jobTypeToEnum: Record<string, string> = {
 };
 
 export default function StudentJobBoard() {
-  const { user } = useAuth();
-  
   // Tabs
   const [activeTab, setActiveTab] = useState<'explore' | 'applications'>('explore');
 
@@ -63,7 +57,7 @@ export default function StudentJobBoard() {
 
       setJobs(Array.isArray(jobsData) ? jobsData : []);
       setApplications(Array.isArray(appsData) ? appsData : []);
-    } catch (err) {
+    } catch {
       toast.error('Failed to load job listings');
     } finally {
       setLoading(false);
@@ -71,7 +65,9 @@ export default function StudentJobBoard() {
   };
 
   useEffect(() => {
-    fetchJobsAndApplications();
+    Promise.resolve().then(() => {
+      fetchJobsAndApplications();
+    });
   }, []);
 
   const handleApplySubmit = async (e: React.FormEvent) => {

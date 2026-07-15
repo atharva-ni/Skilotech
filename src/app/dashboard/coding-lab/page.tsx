@@ -3,7 +3,6 @@
 import React, { useEffect, useState, Suspense, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
-import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 
 interface AiFeedbackType {
@@ -49,9 +48,7 @@ function CodingLabInner() {
   const [code, setCode] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAiFeedback, setShowAiFeedback] = useState(false);
   const [aiFeedback, setAiFeedback] = useState<AiFeedbackType | null>(null);
-  const [showSecondaryHint, setShowSecondaryHint] = useState(false);
   const [execOutput, setExecOutput] = useState<ExecutionOutput | null>(null);
   const [selectedCaseIdx, setSelectedCaseIdx] = useState(0);
   const [activeConsoleTab, setActiveConsoleTab] = useState<'console' | 'ai'>('console');
@@ -70,7 +67,6 @@ function CodingLabInner() {
   const [leftWidth, setLeftWidth] = useState(280);     // px
   const [rightWidth, setRightWidth] = useState(300);   // px
   const [leftCollapsed, setLeftCollapsed] = useState(false);
-  const [rightCollapsed, setRightCollapsed] = useState(false);
   const [outputCollapsed, setOutputCollapsed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingLeft = useRef(false);
@@ -112,7 +108,9 @@ function CodingLabInner() {
   // Load standalone problems on mount if not in step mode
   useEffect(() => {
     if (!isStepMode) {
-      setLoadingProblems(true);
+      Promise.resolve().then(() => {
+        setLoadingProblems(true);
+      });
       fetch('/api/problems')
         .then((r) => r.json())
         .then((data) => {
@@ -129,16 +127,20 @@ function CodingLabInner() {
         })
         .finally(() => setLoadingProblems(false));
     } else {
-      setLoadingProblems(false);
+      Promise.resolve().then(() => {
+        setLoadingProblems(false);
+      });
     }
   }, [isStepMode]);
 
   // Load DB step if stepId is present in URL
   useEffect(() => {
     if (stepId) {
-      setIsStepMode(true);
-      setLoadingStep(true);
-      setSelectedCaseIdx(0);
+      Promise.resolve().then(() => {
+        setIsStepMode(true);
+        setLoadingStep(true);
+        setSelectedCaseIdx(0);
+      });
       fetch(`/api/steps/${stepId}`)
         .then((r) => r.json())
         .then((data) => {
@@ -168,7 +170,9 @@ function CodingLabInner() {
         const supported = ['javascript', 'python', 'cpp', 'java'].find(lang => 
           tests && tests[lang] && tests[lang].trim() !== ''
         ) as Language || 'javascript';
-        setLanguage(supported);
+        Promise.resolve().then(() => {
+          setLanguage(supported);
+        });
       }
     }
   }, [activeProblem, isStepMode, language]);
@@ -177,11 +181,12 @@ function CodingLabInner() {
   useEffect(() => {
     if (!isStepMode && activeProblem) {
       const starter = activeProblem.starterCode as Record<string, string>;
-      setCode(starter?.[language] || '');
-      setExecOutput(null);
-      setAiFeedback(null);
-      setShowAiFeedback(false);
-      setSelectedCaseIdx(0);
+      Promise.resolve().then(() => {
+        setCode(starter?.[language] || '');
+        setExecOutput(null);
+        setAiFeedback(null);
+        setSelectedCaseIdx(0);
+      });
     }
   }, [activeProblem, language, isStepMode]);
 
@@ -272,7 +277,6 @@ function CodingLabInner() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setExecOutput(null);
-    setShowSecondaryHint(false);
     setOutputCollapsed(false);
     setActiveConsoleTab('console'); // Stay on Console tab first
     setAiFeedback(null); // Clear previous AI feedback on new submit
@@ -307,8 +311,7 @@ function CodingLabInner() {
     );
   }
 
-  const effectiveLeft = leftCollapsed ? 0 : leftWidth;
-  const effectiveRight = 0;
+
 
   return (
     <div

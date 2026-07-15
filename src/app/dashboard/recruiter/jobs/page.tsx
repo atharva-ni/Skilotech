@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
-import { Briefcase, MapPin, IndianRupee, X, Edit3, Trash2, Calendar, FileText } from 'lucide-react';
+import { Briefcase, IndianRupee, X, Edit3, Trash2 } from 'lucide-react';
 
 const enumToJobType: Record<string, string> = {
   'full_time': 'Full-time',
@@ -47,7 +47,9 @@ export default function RecruiterJobs() {
   };
 
   useEffect(() => {
-    fetchJobs();
+    Promise.resolve().then(() => {
+      fetchJobs();
+    });
   }, []);
 
   const openCreateModal = () => {

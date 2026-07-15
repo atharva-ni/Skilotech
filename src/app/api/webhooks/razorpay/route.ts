@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       const orderId = paymentEntity.order_id;
       const paymentId = paymentEntity.id;
       const paymentMethod = paymentEntity.method;
-      const email = paymentEntity.email;
+
 
       // Find the corresponding payment in DB
       const dbPayment = await prisma.payment.findUnique({

@@ -48,7 +48,9 @@ export default function CourseApprovals() {
   }
 
   useEffect(() => {
-    fetchCourses();
+    Promise.resolve().then(() => {
+      fetchCourses();
+    });
   }, []);
 
   const handleApprove = async (id: string) => {

@@ -4,12 +4,13 @@ import { useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-export function useGsapAnimations(isLoaded: boolean) {
+export function useGsapAnimations(isLoaded: boolean, onStepChange?: (step: number) => void) {
   useEffect(() => {
     // Only run on client-side and when component is fully loaded
     if (!isLoaded || typeof window === 'undefined') return;
 
     let ctx: any;
+    let handleSync: ((e: any) => void) | undefined;
     const timer = setTimeout(() => {
       console.log('useGsapAnimations: Initializing animations...');
       try {
@@ -198,111 +199,57 @@ export function useGsapAnimations(isLoaded: boolean) {
         );
       }
 
-      // ─── 12. PROCESS SECTION ANIMATION (GSAP + ScrollTrigger) ───────────────────────
+      // ─── 12. PROCESS SECTION ANIMATION (Fade-in + Pin & Scrub) ───────────────────────
       const processSection = document.querySelector('.gsap-process-section');
-      const nodes = gsap.utils.toArray(".gsap-timeline-node") as any[];
-      const leftLight = document.querySelector('.gsap-ambient-left');
-      const rightLight = document.querySelector('.gsap-ambient-right');
-
-      const ambientColors = [
-        { left: 'rgba(99, 102, 241, 0.15)', right: 'rgba(168, 85, 247, 0.15)' }, // Step 1: Indigo/Purple
-        { left: 'rgba(13, 148, 136, 0.15)', right: 'rgba(5, 150, 105, 0.15)' }, // Step 2: Teal/Emerald
-        { left: 'rgba(217, 119, 6, 0.15)',  right: 'rgba(225, 29, 72, 0.15)' },  // Step 3: Amber/Rose
-        { left: 'rgba(79, 70, 229, 0.15)',  right: 'rgba(8, 145, 178, 0.15)' }   // Step 4: Indigo/Cyan
-      ];
-
-      const panels = gsap.utils.toArray(".gsap-story-panel") as any[];
-
-      if (processSection && panels.length > 1 && window.innerWidth > 1024) {
-        // 1. Pinned Timeline Scroll Trigger
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: processSection,
-            start: "top top",
-            end: `+=${panels.length * 800}`,
-            pin: true,
-            scrub: 0.2,
-            invalidateOnRefresh: true,
+      if (processSection && onStepChange && window.innerWidth > 1024) {
+        // Pinned workflow ScrollTrigger mapping scroll position to interactive steps
+        const trigger = ScrollTrigger.create({
+          trigger: processSection,
+          start: 'top top',
+          end: '+=2400',
+          pin: true,
+          scrub: true,
+          snap: {
+            snapTo: 1 / 3,
+            duration: { min: 0.1, max: 0.3 },
+            delay: 0.05,
+            ease: 'power1.inOut'
+          },
+          onUpdate: (self) => {
+            const progress = self.progress;
+            let step = Math.floor(progress * 4);
+            if (step > 3) step = 3;
+            onStepChange(step);
           }
         });
 
-        // Initial setup states: show first panel, hide others
-        panels.forEach((panel: any, idx: number) => {
-          if (idx !== 0) {
-            gsap.set(panel, { opacity: 0, display: 'none' });
-          } else {
-            gsap.set(panel, { opacity: 1, display: 'grid' });
+        handleSync = (e: any) => {
+          const idx = e.detail.step;
+          const scrollPos = trigger.start + (idx / 3) * (trigger.end - trigger.start);
+          window.scrollTo({
+            top: scrollPos,
+            behavior: 'smooth'
+          });
+        };
+        window.addEventListener('sync-workflow-step', handleSync);
+
+        // Grid fade-in entry animation
+        gsap.fromTo(
+          processSection.querySelectorAll('.gsap-premium-visual-card, .gsap-premium-content-card, .gsap-timeline-col'),
+          { opacity: 0, y: 25 },
+          {
+            opacity: 1,
+            y: 0,
+            stagger: 0.1,
+            duration: 0.6,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: processSection,
+              start: 'top 80%',
+              toggleActions: 'play none none none',
+            },
           }
-        });
-
-        // Initial setup for timeline nodes
-        nodes.forEach((node: any, idx: number) => {
-          const indexText = node.querySelector(".gsap-node-index");
-          if (idx === 0) {
-            gsap.set(node, { borderColor: "#6366f1", backgroundColor: "#6366f1", scale: 1.15 });
-            if (indexText) gsap.set(indexText, { color: "#ffffff" });
-          } else {
-            gsap.set(node, { borderColor: "rgba(0, 0, 0, 0.08)", backgroundColor: "#ffffff", scale: 1 });
-            if (indexText) gsap.set(indexText, { color: "var(--text-tertiary)" });
-          }
-        });
-
-        // Initial setup for ambient background glows
-        if (leftLight && rightLight) {
-          gsap.set(leftLight, { background: `radial-gradient(circle, ${ambientColors[0].left} 0%, transparent 70%)` });
-          gsap.set(rightLight, { background: `radial-gradient(circle, ${ambientColors[0].right} 0%, transparent 70%)` });
-        }
-
-        // Sequence transitions
-        panels.forEach((panel: any, idx: number) => {
-          if (idx < panels.length - 1) {
-            const nextPanel = panels[idx + 1];
-            const nextColor = ambientColors[idx + 1];
-            const currentNode = nodes[idx] as any;
-            const nextNode = nodes[idx + 1] as any;
-            const curText = currentNode?.querySelector?.(".gsap-node-index");
-            const nextText = nextNode?.querySelector?.(".gsap-node-index");
-
-            // Hold current panel visible for a moment
-            tl.to({}, { duration: 0.5 });
-
-            // Transition: Snap panels
-            tl.set(panel, { opacity: 0, display: 'none' }, `trans_${idx}`);
-            tl.set(nextPanel, { opacity: 1, display: 'grid' }, `trans_${idx}`);
-
-            // Transition: Animate timeline progress bar height to the next node in sync
-            const nextHeight = `${((idx + 1) / (panels.length - 1)) * 100}%`;
-            tl.to(".gsap-timeline-progress", {
-              height: nextHeight,
-              duration: 0.3,
-              ease: "none"
-            }, `trans_${idx}`);
-
-            // Transition: Deactivate current timeline node, activate next
-            tl.to(currentNode, { borderColor: "rgba(0, 0, 0, 0.08)", backgroundColor: "#ffffff", scale: 1, duration: 0.3 }, `trans_${idx}`);
-            if (curText) tl.to(curText, { color: "var(--text-tertiary)", duration: 0.3 }, `trans_${idx}`);
-
-            tl.to(nextNode, { borderColor: "#6366f1", backgroundColor: "#6366f1", scale: 1.15, duration: 0.3 }, `trans_${idx}`);
-            if (nextText) tl.to(nextText, { color: "#ffffff", duration: 0.3 }, `trans_${idx}`);
-
-            // Transition: Morph ambient background glows
-            if (leftLight && rightLight) {
-              tl.to(leftLight, {
-                background: `radial-gradient(circle, ${nextColor.left} 0%, transparent 70%)`,
-                duration: 0.6,
-                ease: "power2.inOut"
-              }, `trans_${idx}`);
-              tl.to(rightLight, {
-                background: `radial-gradient(circle, ${nextColor.right} 0%, transparent 70%)`,
-                duration: 0.6,
-                ease: "power2.inOut"
-              }, `trans_${idx}`);
-            }
-          }
-        });
-
-        // Extra hold on final panel
-        tl.to({}, { duration: 0.5 });
+        );
       }
 
       // ─── 13. Hero watermark parallax ───────────────────
@@ -358,6 +305,9 @@ export function useGsapAnimations(isLoaded: boolean) {
       clearTimeout(timer);
       if (ctx) ctx.revert();
       ScrollTrigger.getAll().forEach((t) => t.kill());
+      if (handleSync) {
+        window.removeEventListener('sync-workflow-step', handleSync);
+      }
     };
   }, [isLoaded]);
 }

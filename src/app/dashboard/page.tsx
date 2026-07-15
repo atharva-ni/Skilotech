@@ -215,7 +215,7 @@ export default function StudentDashboard() {
             icon: <Briefcase size={20} style={{ color: 'var(--info)' }} />, 
             trend: stats.activeApplicationsCount === 1 ? '1 active' : `${stats.activeApplicationsCount} active` 
           },
-        ].map((stat, i) => (
+        ].map((stat) => (
           <motion.div 
             key={stat.label} 
             variants={itemVariants}

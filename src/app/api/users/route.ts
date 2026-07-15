@@ -7,7 +7,7 @@ import { UserRole } from '@prisma/client';
 export async function GET(req: NextRequest) {
   try {
     // 1. Authenticate as admin
-    const currentUser = await requireRole(UserRole.admin, UserRole.super_admin);
+    await requireRole(UserRole.admin, UserRole.super_admin);
 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search');

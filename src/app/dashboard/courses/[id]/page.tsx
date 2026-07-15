@@ -17,7 +17,7 @@ interface PageProps {
 
 export default function CourseDetail({ params }: PageProps) {
   const { id } = use(params);
-  const { user, refreshProfile } = useAuth();
+  const { user, refreshProfile, enrolledCourseIds } = useAuth();
   
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,8 @@ export default function CourseDetail({ params }: PageProps) {
       }
       const data = await res.json();
       setCourse(data);
-      setIsEnrolled(data.isEnrolled);
+      const userIsInstructorOrAdmin = user?.role === 'admin' || data.instructorId === user?.id;
+      setIsEnrolled(data.isEnrolled || enrolledCourseIds.includes(id) || !!userIsInstructorOrAdmin);
       setProgressPct(data.progressPct);
     } catch (err: any) {
       console.error(err);
@@ -203,7 +204,9 @@ export default function CourseDetail({ params }: PageProps) {
                 </div>
               </div>
               <Link href={`/dashboard/courses/${course.id}/learn`} style={{ width: '100%' }}>
-                <Button style={{ width: '100%' }}>Resume Learning ▶</Button>
+                <Button style={{ width: '100%' }}>
+                  {progressPct > 0 ? 'Resume Learning ▶' : 'Start Learning ▶'}
+                </Button>
               </Link>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: 'var(--font-size-xs)', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-primary)', paddingTop: '12px' }}>
                 <span>✓ Lifetime access to all content</span>

@@ -25,7 +25,6 @@ export default function RazorpayCheckout({
   courseId,
   courseTitle,
   coursePrice,
-  courseDescription,
   onSuccess,
   onCancel,
 }: RazorpayCheckoutProps) {

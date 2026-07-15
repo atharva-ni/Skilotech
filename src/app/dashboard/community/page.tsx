@@ -6,8 +6,7 @@ import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { 
-  Heart, MessageSquare, Pin, Trash2, Send, X, CornerDownRight, 
-  User, CheckCircle, Clock, AlertCircle, Hash, MessageCircle
+  Heart, Trash2, Send, CornerDownRight, Hash, MessageCircle
 } from 'lucide-react';
 
 export default function Community() {
@@ -44,7 +43,9 @@ export default function Community() {
   };
 
   useEffect(() => {
-    fetchPosts();
+    Promise.resolve().then(() => {
+      fetchPosts();
+    });
   }, []);
 
   const handleCreatePost = async (e: React.FormEvent) => {
@@ -108,7 +109,7 @@ export default function Community() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-    } catch (err: any) {
+    } catch {
       // Revert fetch on error
       fetchPosts();
     }

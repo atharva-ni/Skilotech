@@ -10,7 +10,7 @@ import styles from './DashboardLayout.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const { isLoaded: clerkLoaded, isSignedIn } = useUser();
   const router = useRouter();
 

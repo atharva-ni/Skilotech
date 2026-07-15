@@ -43,7 +43,9 @@ export default function UserManagement() {
   }
 
   useEffect(() => {
-    fetchUsers();
+    Promise.resolve().then(() => {
+      fetchUsers();
+    });
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {

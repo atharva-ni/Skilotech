@@ -1081,7 +1081,12 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                       boxShadow: 'var(--shadow-md)',
                     }}>
                       <iframe
-                        src={activeStep.videoUrl?.replace('watch?v=', 'embed/')}
+                        src={(() => {
+                          const url = activeStep.videoUrl || '';
+                          const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+                          if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+                          return url.replace('watch?v=', 'embed/');
+                        })()}
                         title={activeStep.title}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen

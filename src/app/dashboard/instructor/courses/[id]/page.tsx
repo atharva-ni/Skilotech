@@ -376,7 +376,7 @@ export default function CourseEditor() {
   const handleSave = async () => {
     setSaving(true);
     let url = '';
-    let method = 'PUT';
+    const method = 'PUT';
     let bodyData = {};
 
     if (selectedNode.type === 'course') {

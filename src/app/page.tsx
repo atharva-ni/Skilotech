@@ -6,8 +6,8 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Code2, Briefcase, Award, Users, HelpCircle, FileText, Shield, Mail } from 'lucide-react';
 import { useGsapAnimations } from './useGsapAnimations';
+import { cn } from '@/lib/utils';
 
 // Inline brand icons (lucide-react doesn't ship brand icons)
 const IconTwitterX = () => (
@@ -25,46 +25,11 @@ const IconGithub = () => (
     <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
   </svg>
 );
-const IconYoutube = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-  </svg>
-);
+
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const features = [
-  {
-    icon: '📚',
-    title: 'Expert-Led Courses',
-    description: 'Learn from industry professionals with structured, project-based courses across tech domains.',
-  },
-  {
-    icon: '💻',
-    title: 'Interactive Coding Lab',
-    description: 'Practice coding in-browser with our Monaco-powered editor. Compile, run, and test instantly.',
-  },
-  {
-    icon: '🤖',
-    title: 'AI-Powered Feedback',
-    description: 'Get instant optimization guidance, style tips, and performance insights on every submission.',
-  },
-  {
-    icon: '💼',
-    title: 'Job Placement',
-    description: 'Apply to top companies, track applications, and get matched with roles that fit your skills.',
-  },
-  {
-    icon: '🏆',
-    title: 'Certifications',
-    description: 'Earn verified certificates on course completion to showcase your skills to recruiters.',
-  },
-  {
-    icon: '💬',
-    title: 'Community',
-    description: 'Join discussions, share knowledge, and collaborate with learners and mentors worldwide.',
-  },
-];
+
 
 const stats = [
   { value: '12,500+', label: 'Active Learners' },
@@ -80,18 +45,18 @@ const partners = [
 
 const workflowSteps = [
   {
-    num: 'Step 01',
-    title: 'Enroll in a Course',
-    desc: 'Browse 150+ expert-led courses tailored to real industry roles. Filter by domain, level, or skill - and start learning in minutes.',
+    stepLabel: 'Enroll',
+    title: 'Master Full-Stack Dev in 12 Weeks',
+    desc: 'Choose from 150+ expert-led, industry-aligned career tracks. Set your own pace, filter by skill, and build a verified curriculum portfolio.',
     visual: (
       <div style={{ fontFamily: 'var(--font-family)', fontSize: '0.85rem', width: '100%' }}>
-        <div style={{ marginBottom: '16px', fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>Trending Courses</div>
+        <div style={{ marginBottom: '16px', fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>Trending Tracks</div>
         {['Full-Stack Web Dev', 'DSA in Python', 'System Design', 'Cloud & DevOps'].map((c, i) => (
-          <div key={c} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: i === 0 ? 'var(--bg-secondary)' : 'transparent', border: '1px solid ' + (i === 0 ? 'rgba(99, 102, 241, 0.2)' : 'rgba(0,0,0,0.03)'), borderRadius: '12px', marginBottom: '8px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: i === 0 ? '0 4px 12px rgba(99, 102, 241, 0.05)' : 'none' }}>
-            <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: i === 0 ? '#6366f1' : 'var(--text-tertiary)', background: i === 0 ? 'rgba(99, 102, 241, 0.08)' : 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '6px' }}>{ ['Web','Dsa','Sys','Ops'][i] }</span>
+          <div key={c} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', background: i === 0 ? 'var(--bg-secondary)' : 'transparent', border: '1px solid ' + (i === 0 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0,0,0,0.03)'), borderRadius: '12px', marginBottom: '8px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: i === 0 ? '0 4px 12px rgba(0, 0, 0, 0.02)' : 'none' }}>
+            <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', color: i === 0 ? 'var(--text-primary)' : 'var(--text-tertiary)', background: i === 0 ? 'rgba(0, 0, 0, 0.05)' : 'var(--bg-tertiary)', padding: '4px 8px', borderRadius: '6px' }}>{ ['Web','Dsa','Sys','Ops'][i] }</span>
             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{c}</span>
             {i === 0 ? (
-              <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, background: '#6366f1', color: '#fff', padding: '4px 10px', borderRadius: 'var(--radius-full)' }}>Enrolled</span>
+              <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 700, background: '#171717', color: '#fff', padding: '4px 10px', borderRadius: 'var(--radius-full)' }}>Enrolled</span>
             ) : (
               <span style={{ marginLeft: 'auto', fontSize: '11px', fontWeight: 600, color: 'var(--text-tertiary)' }}>12 hrs</span>
             )}
@@ -101,9 +66,9 @@ const workflowSteps = [
     ),
   },
   {
-    num: 'Step 02',
-    title: 'Code in the Lab',
-    desc: 'Solve real problems in our Monaco-powered coding lab. Write code, run tests, and get instant pass/fail feedback right in your browser.',
+    stepLabel: 'Learn',
+    title: 'Write Code and Compile Instantly',
+    desc: 'Solve production-grade problems in our interactive, Monaco-powered coding sandbox. Compile, run unit tests, and check boundary conditions instantly.',
     visual: (
       <div style={{ background: '#090d16', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', fontFamily: 'monospace', fontSize: '12px', color: '#c9d1d9', width: '100%', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
         {/* Editor Title Bar */}
@@ -124,7 +89,6 @@ const workflowSteps = [
             <div>2</div>
             <div>3</div>
             <div>4</div>
-            <div>5</div>
           </div>
           {/* Code */}
           <div style={{ flex: 1 }}>
@@ -132,31 +96,30 @@ const workflowSteps = [
             <div style={{ paddingLeft: '16px' }}>low, high = <span style={{ color: '#79c0ff' }}>0</span>, <span style={{ color: '#79c0ff' }}>len</span>(arr) - <span style={{ color: '#79c0ff' }}>1</span></div>
             <div style={{ paddingLeft: '16px' }}><span style={{ color: '#ff7b72' }}>while</span> low &lt;= high:</div>
             <div style={{ paddingLeft: '32px' }}>mid = (low + high) // <span style={{ color: '#79c0ff' }}>2</span></div>
-            <div style={{ paddingLeft: '32px' }}><span style={{ color: '#ff7b72' }}>if</span> arr[mid] == target: <span style={{ color: '#ff7b72' }}>return</span> mid</div>
           </div>
         </div>
         {/* Editor Console/Output Footer */}
         <div style={{ background: '#0d1117', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.05)', fontSize: '11px', color: '#58a6ff' }}>
           <span style={{ color: '#56d364', fontWeight: 700 }}>✓</span>
-          <span>3/3 tests passed · 12ms</span>
+          <span>Running tests... 3/3 passed</span>
         </div>
       </div>
     ),
   },
   {
-    num: 'Step 03',
-    title: 'Get AI Feedback',
-    desc: 'Our AI tutor reviews your code after every submission, pinpointing what to optimize, which patterns to adopt, and how to think like a senior engineer.',
+    stepLabel: 'Build Projects',
+    title: 'Code with Senior AI Guidance',
+    desc: 'Receive instant code reviews from our AI tutor. Detect logical bugs, styling issues, and boundary checks with step-by-step diagnostic feedback.',
     visual: (
       <div style={{ fontSize: '0.85rem', width: '100%' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#6366f1', background: 'rgba(99, 102, 241, 0.08)', padding: '4px 8px', borderRadius: '6px' }}>AI</span>
-          <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>Diagnostics Overview</span>
+          <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#fff', background: '#171717', padding: '4px 8px', borderRadius: '6px' }}>AI TUTOR</span>
+          <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>Diagnostics</span>
         </div>
         {[
-          { label: 'Correct', text: 'Correct binary search logic - O(log n) complexity.', ok: true, col: '#10b981', bg: 'rgba(16, 185, 129, 0.06)' },
-          { label: 'Optimize', text: 'Consider using arr[mid] directly without extra variable.', ok: null, col: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.06)' },
-          { label: 'Warning', text: 'Use integer overflow-safe midpoint: low + (high-low)//2', ok: null, col: '#f59e0b', bg: 'rgba(245, 158, 11, 0.06)' },
+          { label: 'Correct', text: 'O(log n) binary search pattern matches.', ok: true, col: '#10b981', bg: 'rgba(16, 185, 129, 0.06)' },
+          { label: 'Optimize', text: 'Avoid re-calculating midpoint; reuse variables.', ok: null, col: '#171717', bg: 'rgba(23, 23, 23, 0.04)' },
+          { label: 'Warning', text: 'Midpoint calculations can overflow in large lists.', ok: null, col: '#f59e0b', bg: 'rgba(245, 158, 11, 0.06)' },
         ].map((line, i) => (
           <div key={i} style={{ display: 'flex', gap: '12px', padding: '12px 16px', background: line.bg, border: '1px solid rgba(0,0,0,0.02)', borderRadius: '12px', marginBottom: '8px', lineHeight: 1.45 }}>
             <span style={{ fontSize: '9px', fontWeight: 800, color: line.col, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '2px' }}>{line.label}</span>
@@ -167,19 +130,19 @@ const workflowSteps = [
     ),
   },
   {
-    num: 'Step 04',
-    title: 'Land the Job',
-    desc: 'With your verified certificates and real project portfolio, apply directly to our 89+ hiring partners - right from the Skilotech dashboard.',
+    stepLabel: 'Get Hired',
+    title: 'Land Your Dream Job at 89+ Partners',
+    desc: 'Publish your verified certificate and portfolio to recruiter dashboards, applying directly to our hiring pipeline partners like Google, Amazon and Razorpay.',
     visual: (
       <div style={{ fontSize: '0.85rem', width: '100%' }}>
-        <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', marginBottom: '16px', letterSpacing: '-0.02em' }}>Your Applications</div>
+        <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.05rem', marginBottom: '16px', letterSpacing: '-0.02em' }}>Hiring Dashboard</div>
         {[
-          { co: 'Google', role: 'SWE Intern', status: 'Interview', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)' },
-          { co: 'Razorpay', role: 'Backend Dev', status: 'Applied', color: '#7c3aed', bg: 'rgba(124, 124, 237, 0.08)' },
-          { co: 'Flipkart', role: 'Full-Stack', status: 'Offer!', color: '#10b981', bg: 'rgba(16, 185, 129, 0.08)' },
+          { co: 'Google', role: 'SWE Intern', status: 'Interviewing', color: '#2563eb', bg: 'rgba(37, 99, 235, 0.08)' },
+          { co: 'Razorpay', role: 'Backend Developer', status: 'Active Offer', color: '#10b981', bg: 'rgba(16, 185, 129, 0.08)' },
+          { co: 'Flipkart', role: 'Full-Stack Engineer', status: 'Applied', color: '#171717', bg: 'rgba(23, 23, 23, 0.06)' },
         ].map((app, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px', background: 'var(--bg-secondary)', border: '1px solid rgba(0,0,0,0.03)', borderRadius: '12px', marginBottom: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.01)' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: ['#2563eb','#7c3aed','#10b981'][i], display: 'inline-block', flexShrink: 0 }} />
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: ['#2563eb','#10b981','#171717'][i], display: 'inline-block', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '13px' }}>{app.co}</div>
               <div style={{ color: 'var(--text-tertiary)', fontSize: '11px', marginTop: '2px' }}>{app.role}</div>
@@ -329,7 +292,14 @@ export default function LandingPage() {
   const router = useRouter();
   const [editorPhase, setEditorPhase] = useState<string>('typing');
   const [activeFeatureTab, setActiveFeatureTab] = useState(0);
-  useGsapAnimations(isLoaded);
+  const [activeStep, setActiveStep] = useState(0);
+  useGsapAnimations(isLoaded, setActiveStep);
+
+  const handleStepClick = (idx: number) => {
+    setActiveStep(idx);
+    const event = new CustomEvent('sync-workflow-step', { detail: { step: idx } });
+    window.dispatchEvent(event);
+  };
 
   useEffect(() => {
     if (isLoaded && isSignedIn) router.replace('/dashboard');
@@ -688,13 +658,11 @@ export default function LandingPage() {
 
 
       <section className={`${styles.workflowSection} gsap-process-section`} id="how-it-works">
-        {/* Dynamic ambient lights (colors morph on scroll) */}
-        <div className={`${styles.ambientLight} ${styles.ambientLightLeft} gsap-ambient-left`} />
-        <div className={`${styles.ambientLight} ${styles.ambientLightRight} gsap-ambient-right`} />
+        {/* Dynamic background decoration */}
+        <div className={styles.gridBg} />
 
         <div className={styles.sectionInner}>
-
-          {/* Heading — slides up once on scroll enter */}
+          {/* Heading */}
           <div className={`${styles.processHeadingBlock} gsap-story-heading`}>
             <h2 className={styles.sectionTitle}>How Skilotech Works</h2>
             <p className={styles.sectionSubtitle}>
@@ -702,61 +670,118 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Desktop Pinned Layout */}
-          <div className={styles.desktopWorkflow}>
-            <div className={styles.workflowGrid}>
-              {/* Left Column: Vertical Timeline progress indicator */}
-              <div className={styles.timelineColumn}>
-                <div className={styles.timelineTrack} />
-                <div className={`${styles.timelineProgress} gsap-timeline-progress`} />
-                {workflowSteps.map((step, idx) => (
-                  <div key={idx} className={`${styles.timelineNode} gsap-timeline-node`}>
-                    <span className={`${styles.nodeIndex} gsap-node-index`}>0{idx + 1}</span>
-                  </div>
-                ))}
+          {/* Interactive Three-Column Layout */}
+          <div className={styles.workflowGrid}>
+            {/* Column 1: Timeline Steps (left) */}
+            <div className={`${styles.timelineCol} gsap-timeline-col`}>
+              <div className={styles.timelineTrackLine}>
+                {/* Highlighted active/completed line progress */}
+                <div 
+                  className={styles.timelineProgressLine} 
+                  style={{ height: `${(activeStep / 3) * 100}%` }}
+                />
               </div>
-
-              {/* Right Column: Pinned panels */}
-              <div className={styles.processPanels}>
-                {workflowSteps.map((step, i) => (
-                  <article
-                    key={i}
-                    className={`${styles.storyPanel} gsap-story-panel`}
+              {workflowSteps.map((step, idx) => {
+                const isActive = idx === activeStep;
+                const isCompleted = idx < activeStep;
+                return (
+                  <button
+                    key={idx}
+                    className={cn(
+                      styles.timelineStepButton,
+                      isActive && styles.timelineStepActive,
+                      isCompleted && styles.timelineStepCompleted
+                    )}
+                    onClick={() => handleStepClick(idx)}
                   >
-                    {/* Left: visual */}
-                    <div className={styles.panelVisual}>
-                      {step.visual}
-                    </div>
+                    <span className={styles.stepNode}>
+                      {isCompleted ? (
+                        <span className={styles.checkmarkIcon}>✓</span>
+                      ) : isActive ? (
+                        <span className={styles.activeDotNode} />
+                      ) : (
+                        <span className={styles.inactiveDotNode} />
+                      )}
+                    </span>
+                    <span className={styles.stepLabel}>{step.stepLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
 
-                    {/* Right: text */}
-                    <div className={styles.panelText}>
-                      <span className={styles.storyStepNum}>{step.num}</span>
-                      <h3 className={styles.storyStepTitle}>{step.title}</h3>
-                      <p className={styles.storyStepDesc}>{step.desc}</p>
-                      <div style={{ marginTop: '24px' }}>
-                        <Link href="/sign-up" className="btn btn-primary" style={{ borderRadius: 'var(--radius-md)' }}>
-                          Get Started →
-                        </Link>
-                      </div>
+            {/* Column 2: Large Visual Card (middle) */}
+            <div className={styles.visualCol}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className={`${styles.premiumVisualCard} gsap-premium-visual-card`}
+                >
+                  <div className={styles.glowOverlay} />
+                  {workflowSteps[activeStep].visual}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Column 3: Information Card (right) */}
+            <div className={styles.contentCol}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeStep}
+                  initial={{ opacity: 0, x: 15 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -15 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className={`${styles.premiumContentCard} gsap-premium-content-card`}
+                >
+                  {/* Progress Indicator */}
+                  <div className={styles.progressIndicatorBox}>
+                    <div className={styles.progressTextRow}>
+                      <span className={styles.progressEyebrow}>Step {activeStep + 1} of 4</span>
+                      <span className={styles.percentText}>{Math.round(((activeStep + 1) / 4) * 100)}% Complete</span>
                     </div>
-                  </article>
-                ))}
-              </div>
+                    <div className={styles.progressMeterBar}>
+                      <motion.div 
+                        className={styles.progressMeterFill}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${((activeStep + 1) / 4) * 100}%` }}
+                        transition={{ duration: 0.4 }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Step Description */}
+                  <span className={styles.stepEyebrowLabel}>{workflowSteps[activeStep].stepLabel}</span>
+                  <h3 className={styles.stepTitleLabel}>{workflowSteps[activeStep].title}</h3>
+                  <p className={styles.stepDescLabel}>{workflowSteps[activeStep].desc}</p>
+
+                  <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
+                    <Link href="/sign-up" className="btn btn-primary" style={{ width: '100%', borderRadius: 'var(--radius-md)' }}>
+                      Get Started →
+                    </Link>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
 
-          {/* Mobile Linear Steps Layout */}
+          {/* Mobile Layout (same visual stack, but mobile-optimized responsive layout) */}
           <div className={styles.mobileWorkflow}>
             {workflowSteps.map((step, idx) => (
               <div key={idx} className={styles.mobileStepCard}>
+                <div className={styles.mobileStepHeader}>
+                  <span className={styles.mobileStepNum}>Step 0{idx + 1}</span>
+                  <h3 className={styles.mobileStepTitle}>{step.title}</h3>
+                </div>
                 <div className={styles.panelVisual}>
                   {step.visual}
                 </div>
                 <div className={styles.panelText}>
-                  <span className={styles.storyStepNum}>{step.num}</span>
-                  <h3 className={styles.storyStepTitle}>{step.title}</h3>
                   <p className={styles.storyStepDesc}>{step.desc}</p>
-                  <div style={{ marginTop: '24px' }}>
+                  <div style={{ marginTop: '16px' }}>
                     <Link href="/sign-up" className="btn btn-primary" style={{ borderRadius: 'var(--radius-md)' }}>
                       Get Started →
                     </Link>

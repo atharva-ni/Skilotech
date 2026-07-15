@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import Badge from '@/components/ui/Badge';
 import DataTable from '@/components/ui/DataTable';
 import Button from '@/components/ui/Button';
-import { FileText, Link as LinkIcon, Edit, CheckCircle, XCircle } from 'lucide-react';
+import { Link as LinkIcon, Edit } from 'lucide-react';
 
 export default function RecruiterApplicants() {
   const [applicants, setApplicants] = useState<any[]>([]);
@@ -32,7 +32,9 @@ export default function RecruiterApplicants() {
   };
 
   useEffect(() => {
-    fetchApplicants();
+    Promise.resolve().then(() => {
+      fetchApplicants();
+    });
   }, []);
 
   const openStatusModal = (app: any, status: string) => {
