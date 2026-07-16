@@ -5,56 +5,6 @@ import CourseCard from '@/components/ui/CourseCard';
 import SearchFilter from '@/components/ui/SearchFilter';
 import { toast } from 'sonner';
 
-const PlaceholderCard = () => {
-  return (
-    <div style={{
-      border: '2px dashed #cbd5e1',
-      borderRadius: '16px',
-      background: '#ffffff',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '24px',
-      minHeight: '340px',
-      textAlign: 'center',
-      height: '100%'
-    }}>
-      <div style={{
-        width: '36px',
-        height: '36px',
-        borderRadius: '50%',
-        border: '1px solid #e2e8f0',
-        background: '#f8fafc',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#64748b',
-        fontSize: '1.25rem',
-        fontWeight: 300,
-        marginBottom: '16px'
-      }}>
-        +
-      </div>
-      <h3 style={{
-        fontSize: '0.9rem',
-        fontWeight: 700,
-        color: '#0f172a',
-        marginBottom: '6px'
-      }}>
-        More courses on the way
-      </h3>
-      <p style={{
-        fontSize: '0.75rem',
-        color: '#64748b',
-        lineHeight: '1.4',
-        maxWidth: '180px'
-      }}>
-        New tracks are added regularly. Check back soon.
-      </p>
-    </div>
-  );
-};
 
 export default function CourseCatalog() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -288,8 +238,7 @@ export default function CourseCatalog() {
               duration={`${Math.round(course.durationHours || 0)} hours`}
             />
           ))}
-          {/* Append the placeholder card at the end */}
-          <PlaceholderCard />
+
         </div>
       )}
     </div>

@@ -63,8 +63,19 @@ function CodingLabInner() {
   const [problems, setProblems] = useState<any[]>([]);
   const [loadingProblems, setLoadingProblems] = useState(true);
 
+  // Difficulty filter and success prompt states
+  const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'easy' | 'medium' | 'hard'>('all');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Completed problems and dropdown filter state helpers
+  const [completedProblemIds, setCompletedProblemIds] = useState<string[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
+
   // Resizable panels
-  const [leftWidth, setLeftWidth] = useState(280);     // px
+  const [leftWidth, setLeftWidth] = useState(360);     // px
   const [rightWidth, setRightWidth] = useState(300);   // px
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [outputCollapsed, setOutputCollapsed] = useState(false);
@@ -102,8 +113,37 @@ function CodingLabInner() {
     window.addEventListener('mouseup', onUp);
   }, [leftWidth, rightWidth]);
 
-  const activeProblem = problems.find((p) => p.slug === selectedProblemId || p.id === selectedProblemId) ?? problems[0];
+  const filteredProblems = problems.filter(p => {
+    if (difficultyFilter === 'all') return true;
+    return p.difficulty === difficultyFilter;
+  });
+
+  const activeProblem = filteredProblems.find((p) => p.slug === selectedProblemId || p.id === selectedProblemId) ?? filteredProblems[0] ?? problems.find((p) => p.slug === selectedProblemId || p.id === selectedProblemId) ?? problems[0];
   const activeExamples = isStepMode && dbStep ? (dbStep.metadata?.examples || []) : (activeProblem?.examples || []);
+
+  // Auto-switch problem when difficulty filter changes
+  useEffect(() => {
+    if (!isStepMode && filteredProblems.length > 0) {
+      const isStillAvailable = filteredProblems.some(p => p.slug === selectedProblemId || p.id === selectedProblemId);
+      if (!isStillAvailable) {
+        setSelectedProblemId(filteredProblems[0].slug || filteredProblems[0].id);
+      }
+    }
+  }, [difficultyFilter, isStepMode, filteredProblems, selectedProblemId]);
+
+  // Click outside to close custom dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setIsFilterDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Load standalone problems on mount if not in step mode
   useEffect(() => {
@@ -116,6 +156,9 @@ function CodingLabInner() {
         .then((data) => {
           if (data.problems) {
             setProblems(data.problems);
+            if (data.completedProblemIds) {
+              setCompletedProblemIds(data.completedProblemIds);
+            }
             if (data.problems.length > 0) {
               setSelectedProblemId(data.problems[0].slug || data.problems[0].id);
             }
@@ -289,6 +332,11 @@ function CodingLabInner() {
 
       if (result.testResults?.passed) {
         toast.success(`🎉 All ${result.testResults.passedCount} tests passed! (${elapsed}ms)`);
+        setShowSuccessModal(true);
+        const solvedId = activeProblem?.slug || activeProblem?.id;
+        if (solvedId && !completedProblemIds.includes(solvedId)) {
+          setCompletedProblemIds(prev => [...prev, solvedId]);
+        }
       } else {
         if (result.testResults) {
           toast.error(`❌ ${result.testResults.passedCount}/${result.testResults.totalCount} passed - ${result.testResults.summary}`);
@@ -297,6 +345,38 @@ function CodingLabInner() {
         }
       }
     }
+  };
+
+  const handleAttemptNext = () => {
+    if (isStepMode) {
+      const courseId = dbStep?.lesson?.module?.courseId;
+      if (courseId) {
+        router.push(`/dashboard/courses/${courseId}/learn`);
+      } else {
+        router.push('/dashboard');
+      }
+      return;
+    }
+
+    const currentIdx = filteredProblems.findIndex(p => p.slug === selectedProblemId || p.id === selectedProblemId);
+    if (currentIdx !== -1 && currentIdx < filteredProblems.length - 1) {
+      const nextProblem = filteredProblems[currentIdx + 1];
+      setSelectedProblemId(nextProblem.slug || nextProblem.id);
+      toast.info(`Attempting next challenge: "${nextProblem.title}"`);
+    } else if (filteredProblems.length > 0) {
+      const firstProblem = filteredProblems[0];
+      setSelectedProblemId(firstProblem.slug || firstProblem.id);
+      toast.info(`Restarting challenges list: "${firstProblem.title}"`);
+    }
+    
+    setExecOutput(null);
+    setAiFeedback(null);
+    setSelectedCaseIdx(0);
+    setShowSuccessModal(false);
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
   };
 
   // Compute Monaco language identifier
@@ -319,8 +399,9 @@ function CodingLabInner() {
       style={{
         display: 'flex',
         flexDirection: 'row',
-        height: 'calc(100vh - var(--header-height) - 48px)',
-        margin: '-12px',
+        height: '100vh',
+        width: '100%',
+        margin: 0,
         overflow: 'hidden',
         position: 'relative',
         userSelect: 'none',
@@ -409,36 +490,259 @@ function CodingLabInner() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              {/* Problem selector dropdown */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-primary)' }}>
-                <div style={{ position: 'relative', width: '100%' }}>
-                  <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, pointerEvents: 'none', fontSize: '0.85rem' }}>📚</span>
-                  <select
-                    className="input select"
-                    value={selectedProblemId}
-                    onChange={(e) => setSelectedProblemId(e.target.value)}
-                    style={{
-                      paddingLeft: '2.5rem',
-                      backgroundColor: '#ffffff',
-                      borderColor: '#e5e5e5',
-                      borderRadius: 'var(--radius-md)',
-                      cursor: 'pointer',
-                      width: '100%',
-                      fontSize: 'var(--font-size-sm)',
-                      height: '42px',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {problems.map((problem) => (
-                      <option
-                        key={problem.id || problem.slug}
-                        value={problem.slug || problem.id}
-                        style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              {/* Return link for standalone mode */}
+              <div style={{ padding: '12px 16px 0 16px', background: 'var(--bg-tertiary)' }}>
+                <button
+                  onClick={() => {
+                    router.push('/dashboard');
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--accent-primary, #7c3aed)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: '0',
+                    transition: 'color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent-primary-hover, #6d28d9)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--accent-primary, #7c3aed)')}
+                >
+                  ← Return to Dashboard
+                </button>
+              </div>
+
+              {/* Problem selector dropdown and difficulty filter */}
+              <div style={{ 
+                padding: '12px 16px', 
+                borderBottom: '1px solid var(--border-primary)',
+                background: 'var(--bg-tertiary)'
+              }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%' }}>
+                  {/* Problem Dropdown */}
+                  <div ref={dropdownRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      style={{
+                        paddingLeft: '2.5rem',
+                        paddingRight: '2rem',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        width: '100%',
+                        fontSize: 'var(--font-size-sm)',
+                        height: '42px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        textAlign: 'left',
+                        color: 'var(--text-primary)',
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        position: 'relative'
+                      }}
+                    >
+                      <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, fontSize: '0.85rem' }}>📚</span>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, fontWeight: 500 }}>
+                        {activeProblem ? (
+                          <>
+                            {completedProblemIds.includes(activeProblem.id) || completedProblemIds.includes(activeProblem.slug) ? '✓ ' : ''}
+                            {activeProblem.title}
+                          </>
+                        ) : 'Select Challenge'}
+                      </span>
+                      <span style={{ fontSize: '8px', opacity: 0.5 }}>▼</span>
+                    </button>
+
+                    {isDropdownOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '46px',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        maxHeight: '260px',
+                        overflowY: 'auto',
+                        zIndex: 1000
+                      }}>
+                        {filteredProblems.map((problem) => {
+                          const isCompleted = completedProblemIds.includes(problem.id) || completedProblemIds.includes(problem.slug);
+                          const isActive = problem.slug === selectedProblemId || problem.id === selectedProblemId;
+                          const dotColor = problem.difficulty === 'easy' 
+                            ? '#10b981' 
+                            : problem.difficulty === 'medium'
+                              ? '#f59e0b'
+                              : '#ef4444';
+
+                          return (
+                            <div
+                              key={problem.id || problem.slug}
+                              onClick={() => {
+                                setSelectedProblemId(problem.slug || problem.id);
+                                setIsDropdownOpen(false);
+                              }}
+                              style={{
+                                padding: '10px 14px',
+                                fontSize: 'var(--font-size-sm)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                background: isActive ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
+                                color: isActive ? 'var(--accent-primary-hover)' : 'var(--text-primary)',
+                                transition: 'all 0.15s ease',
+                                borderBottom: '1px solid #f1f5f9'
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isActive) e.currentTarget.style.backgroundColor = '#f8fafc';
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                <span style={{ 
+                                  color: '#10b981', 
+                                  fontWeight: 900, 
+                                  fontSize: '14px', 
+                                  width: '14px',
+                                  display: 'inline-block',
+                                  visibility: isCompleted ? 'visible' : 'hidden'
+                                }}>
+                                  ✓
+                                </span>
+                                <span style={{ fontWeight: isActive ? 600 : 400 }}>{problem.title}</span>
+                              </div>
+                              <span style={{ 
+                                width: '8px', 
+                                height: '8px', 
+                                borderRadius: '50%', 
+                                backgroundColor: dotColor,
+                                flexShrink: 0,
+                                marginLeft: '8px'
+                              }} title={problem.difficulty} />
+                            </div>
+                          );
+                        })}
+                        {filteredProblems.length === 0 && (
+                          <div style={{ padding: '12px', fontSize: '12px', color: 'var(--text-tertiary)', textAlign: 'center' }}>
+                            No challenges available
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Difficulty selector (custom filter icon dropdown) */}
+                  <div ref={filterDropdownRef} style={{ position: 'relative', flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: 'var(--radius-md)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        boxShadow: isFilterDropdownOpen ? 'inset 0 1px 3px rgba(0,0,0,0.06)' : 'none'
+                      }}
+                      title="Filter by Difficulty"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill={difficultyFilter !== 'all' ? 'var(--accent-primary, #7c3aed)' : 'none'} 
+                        stroke={difficultyFilter !== 'all' ? 'var(--accent-primary, #7c3aed)' : 'currentColor'} 
+                        strokeWidth="2.5" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        style={{ opacity: 0.8 }}
                       >
-                        {problem.title} ({problem.difficulty})
-                      </option>
-                    ))}
-                  </select>
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                      </svg>
+                    </button>
+
+                    {isFilterDropdownOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '46px',
+                        right: 0,
+                        backgroundColor: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 'var(--radius-md)',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                        width: '140px',
+                        zIndex: 1000,
+                        padding: '4px 0'
+                      }}>
+                        {[
+                          { value: 'all', label: 'All', count: problems.length, dotColor: null },
+                          { value: 'easy', label: 'Easy', count: problems.filter(p => p.difficulty === 'easy').length, dotColor: '#10b981' },
+                          { value: 'medium', label: 'Medium', count: problems.filter(p => p.difficulty === 'medium').length, dotColor: '#f59e0b' },
+                          { value: 'hard', label: 'Hard', count: problems.filter(p => p.difficulty === 'hard').length, dotColor: '#ef4444' }
+                        ].map(opt => {
+                          const isActive = difficultyFilter === opt.value;
+                          return (
+                            <div
+                              key={opt.value}
+                              onClick={() => {
+                                setDifficultyFilter(opt.value as any);
+                                setIsFilterDropdownOpen(false);
+                              }}
+                              style={{
+                                padding: '8px 12px',
+                                fontSize: 'var(--font-size-sm)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                background: isActive ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
+                                color: isActive ? 'var(--accent-primary-hover)' : 'var(--text-primary)',
+                                transition: 'all 0.15s ease',
+                                fontWeight: isActive ? 600 : 400
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isActive) e.currentTarget.style.backgroundColor = '#f8fafc';
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {opt.dotColor && (
+                                  <span style={{ 
+                                    width: '6px', 
+                                    height: '6px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: opt.dotColor 
+                                  }} />
+                                )}
+                                <span>{opt.label}</span>
+                              </div>
+                              <span style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>({opt.count})</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1182,7 +1486,150 @@ function CodingLabInner() {
         )}
       </div> {/* end middle pane */}
 
+      {/* Completed Success Prompt Modal */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.4)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          animation: 'fadeIn 0.25s ease-out'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '24px',
+            padding: '36px',
+            width: '420px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            border: '1px solid rgba(255,255,255,0.7)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
+            <style>{`
+              @keyframes scaleIn {
+                from { transform: scale(0.9); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+              }
+              @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-10px); }
+                100% { transform: translateY(0px); }
+              }
+            `}</style>
+            
+            <div style={{
+              fontSize: '4.5rem',
+              lineHeight: 1,
+              marginBottom: '20px',
+              animation: 'float 3s ease-in-out infinite'
+            }}>
+              🏆
+            </div>
 
+            <h3 style={{
+              fontSize: '1.5rem',
+              fontWeight: 800,
+              color: '#0f172a',
+              margin: '0 0 8px 0',
+              letterSpacing: '-0.025em'
+            }}>
+              Challenge Accepted!
+            </h3>
+            
+            <p style={{
+              fontSize: '13px',
+              color: '#64748b',
+              margin: '0 0 24px 0',
+              lineHeight: '1.5',
+              maxWidth: '320px'
+            }}>
+              Congratulations! Your solution passed all automated test cases successfully with optimal runtime efficiency.
+            </p>
+
+            {/* Performance Stats */}
+            {execOutput && (
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                width: '100%',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '12px 16px',
+                marginBottom: '28px',
+                justifyContent: 'space-around'
+              }}>
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tests Passed</div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#10b981', marginTop: '2px' }}>
+                    {execOutput.testResults?.passedCount || 0} / {execOutput.testResults?.totalCount || 0}
+                  </div>
+                </div>
+                <div style={{ width: '1px', background: '#e2e8f0' }} />
+                <div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Runtime</div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: '#6366f1', marginTop: '2px' }}>
+                    {execOutput.timeMs} ms
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+              <button
+                onClick={handleAttemptNext}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '14px 24px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                {isStepMode ? 'Return to Course Overview ➔' : 'Attempt Next Challenge ➔'}
+              </button>
+
+              <button
+                onClick={handleCloseSuccessModal}
+                style={{
+                  background: '#ffffff',
+                  color: '#475569',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '12px 24px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+              >
+                Review Code
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+ 
     </div>
   );
 }

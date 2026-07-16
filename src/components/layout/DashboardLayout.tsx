@@ -3,7 +3,7 @@
 import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import styles from './DashboardLayout.module.css';
@@ -13,6 +13,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { isLoading } = useAuth();
   const { isLoaded: clerkLoaded, isSignedIn } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
+  const isCodingLab = pathname === '/dashboard/coding-lab';
 
   // Wait for both Clerk and our AuthContext to finish loading
   React.useEffect(() => {
@@ -96,9 +98,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className={styles.layout}>
       {/* Background patterns */}
       <div className="grid-bg" />
-      <Sidebar />
-      <Header />
-      <main className={styles.main}>
+      {!isCodingLab && <Sidebar />}
+      {!isCodingLab && <Header />}
+      <main className={`${styles.main} ${isCodingLab ? styles.codingLabMain : ''}`}>
         <AnimatePresence mode="wait">
           <motion.div
             initial={{ opacity: 0, y: 8 }}

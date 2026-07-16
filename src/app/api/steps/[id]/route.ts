@@ -36,7 +36,13 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return apiError('Step not found', 404);
     }
 
-    return apiSuccess({ step });
+    // Map 'text' database step type to 'assignment' if marked in metadata
+    const stepResponse = { ...step };
+    if (step.metadata && typeof step.metadata === 'object' && (step.metadata as any).isAssignment) {
+      stepResponse.stepType = 'assignment' as any;
+    }
+
+    return apiSuccess({ step: stepResponse });
   } catch (error: any) {
     console.error(`Error fetching step:`, error);
     return apiError(error?.message || 'Failed to fetch step details', 500);
@@ -93,16 +99,51 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       }
     }
 
+    const { stepType, attachmentUrl, attachmentName, ...rest } = validatedData;
+    let updatePayload: any = { ...rest };
+    
+    if (stepType) {
+      if (stepType === 'assignment') {
+        updatePayload.stepType = 'text';
+        const currentMetadata = (stepItem.metadata as any) || {};
+        updatePayload.metadata = {
+          ...currentMetadata,
+          isAssignment: true,
+          attachmentUrl: attachmentUrl !== undefined ? attachmentUrl : currentMetadata.attachmentUrl,
+          attachmentName: attachmentName !== undefined ? attachmentName : currentMetadata.attachmentName,
+        };
+      } else {
+        updatePayload.stepType = stepType;
+        const currentMetadata = (stepItem.metadata as any) || {};
+        const { isAssignment, attachmentUrl: aUrl, attachmentName: aName, ...otherMetadata } = currentMetadata;
+        updatePayload.metadata = otherMetadata;
+      }
+    } else {
+      const currentMetadata = (stepItem.metadata as any) || {};
+      if (currentMetadata.isAssignment) {
+        updatePayload.metadata = {
+          ...currentMetadata,
+          attachmentUrl: attachmentUrl !== undefined ? attachmentUrl : currentMetadata.attachmentUrl,
+          attachmentName: attachmentName !== undefined ? attachmentName : currentMetadata.attachmentName,
+        };
+      }
+    }
+
     const updatedStep = await prisma.lessonStep.update({
       where: { id },
-      data: validatedData,
+      data: updatePayload,
     });
+
+    const stepResponse = { ...updatedStep };
+    if (updatedStep.metadata && typeof updatedStep.metadata === 'object' && (updatedStep.metadata as any).isAssignment) {
+      stepResponse.stepType = 'assignment' as any;
+    }
 
     // Invalidate course detail cache
     await cache.del(`course:detail:${courseId}`);
 
-    console.log(`Step updated: ${updatedStep.title} (ID: ${updatedStep.id})`);
-    return apiSuccess({ success: true, step: updatedStep });
+    console.log(`Step updated: ${stepResponse.title} (ID: ${stepResponse.id})`);
+    return apiSuccess({ success: true, step: stepResponse });
   } catch (error: any) {
     console.error('Error updating step:', error);
     return apiError(error?.message || 'Failed to update step', 400);

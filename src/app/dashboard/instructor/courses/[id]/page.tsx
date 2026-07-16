@@ -7,7 +7,7 @@ import Editor from '@monaco-editor/react';
 import { toast } from 'sonner';
 import { 
   BookOpen, Folder, FileText, Video, Code, Plus, Trash2, ArrowUp, ArrowDown, 
-  ChevronRight, ChevronDown, Save, Eye, ArrowLeft, Loader2, CheckCircle2, AlertCircle, X, Menu
+  ChevronRight, ChevronDown, Save, Eye, ArrowLeft, Loader2, CheckCircle2, AlertCircle, X, Menu, ClipboardList
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -103,7 +103,7 @@ export default function CourseEditor() {
   const [inlineAddModuleTitle, setInlineAddModuleTitle] = useState('');
   const [inlineAddLesson, setInlineAddLesson] = useState<string | null>(null); // moduleId or null
   const [inlineAddLessonTitle, setInlineAddLessonTitle] = useState('');
-  const [inlineAddStep, setInlineAddStep] = useState<{ lessonId: string; type: 'text' | 'video' | 'lab' } | null>(null);
+  const [inlineAddStep, setInlineAddStep] = useState<{ lessonId: string; type: 'text' | 'video' | 'lab' | 'assignment' } | null>(null);
   const [inlineAddStepTitle, setInlineAddStepTitle] = useState('');
 
   // Drag and drop states for modules
@@ -308,7 +308,9 @@ export default function CourseEditor() {
           labStarterCode: activeStep.labStarterCode || '',
           labSolutionCode: activeStep.labSolutionCode || '',
           labInstructions: activeStep.labInstructions || '',
-          lessonId: activeStep.lessonId || ''
+          lessonId: activeStep.lessonId || '',
+          attachmentUrl: activeStep.metadata?.attachmentUrl || '',
+          attachmentName: activeStep.metadata?.attachmentName || ''
         };
         setEditStep(data);
         setSavedSnapshot(JSON.stringify(data));
@@ -484,7 +486,7 @@ export default function CourseEditor() {
     }
   };
 
-  const handleAddStep = async (lessonId: string, currentStepsCount: number, type: 'text' | 'video' | 'lab') => {
+  const handleAddStep = async (lessonId: string, currentStepsCount: number, type: 'text' | 'video' | 'lab' | 'assignment') => {
     const title = inlineAddStepTitle.trim();
     if (!title) { toast.error('Step title is required'); return; }
 
@@ -499,7 +501,7 @@ export default function CourseEditor() {
             lessonId,
             stepType: type,
             sortOrder: currentStepsCount + 1,
-            textContent: type === 'text' ? 'Write your content here...' : '',
+            textContent: (type === 'text' || type === 'assignment') ? 'Write your content here...' : '',
             labLanguage: type === 'lab' ? 'javascript' : undefined,
             labStarterCode: type === 'lab' ? '// Starter code here' : undefined,
             labInstructions: type === 'lab' ? 'Enter instructions here' : undefined
@@ -689,6 +691,7 @@ export default function CourseEditor() {
     switch (type) {
       case 'video': return <Video size={13} className="text-info" />;
       case 'lab': return <Code size={13} className="text-warning" />;
+      case 'assignment': return <ClipboardList size={13} style={{ color: '#ec4899' }} />;
       default: return <FileText size={13} className="text-primary" />;
     }
   };
@@ -1300,6 +1303,13 @@ export default function CourseEditor() {
                                     >
                                       + Lab
                                     </button>
+                                    <button 
+                                      onClick={() => { setInlineAddStep({ lessonId: les.id, type: 'assignment' }); setInlineAddStepTitle(''); }}
+                                      className="btn btn-ghost" 
+                                      style={{ fontSize: '9px', padding: '2px 4px', color: 'var(--text-secondary)' }}
+                                    >
+                                      + Assignment
+                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -1605,12 +1615,13 @@ export default function CourseEditor() {
                     <option value="text">📖 Text/Markdown Documentation</option>
                     <option value="video">🎥 Video Lecture</option>
                     <option value="lab">💻 Interactive Coding Lab</option>
+                    <option value="assignment">📝 Assignment</option>
                   </select>
                 </div>
               </div>
 
-              {/* A. TEXT CONTENT TYPE */}
-              {editStep.stepType === 'text' && (() => {
+              {/* A. TEXT CONTENT OR ASSIGNMENT TYPE */}
+              {(editStep.stepType === 'text' || editStep.stepType === 'assignment') && (() => {
                 const pages = splitTextIntoPages(editStep.textContent || '');
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
@@ -1661,6 +1672,47 @@ export default function CourseEditor() {
                         <span> This step will be automatically split into <strong>{pages.length} pages</strong> (max ~1200 chars per page) because of its length.</span>
                       )}
                     </div>
+                    {editStep.stepType === 'assignment' && (
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '16px',
+                        background: '#f8fafc',
+                        padding: '16px',
+                        borderRadius: '8px',
+                        border: '1px dashed var(--border-secondary)',
+                        marginTop: '12px'
+                      }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <label className="label" style={{ fontWeight: 700 }}>Attachment File URL</label>
+                          <input
+                            type="text"
+                            className="input"
+                            placeholder="https://example.com/dataset.zip"
+                            value={editStep.attachmentUrl || ''}
+                            onChange={(e) => setEditStep({ 
+                              ...editStep, 
+                              attachmentUrl: e.target.value
+                            })}
+                            style={{ background: '#ffffff' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <label className="label" style={{ fontWeight: 700 }}>Attachment File Label / Name</label>
+                          <input
+                            type="text"
+                            className="input"
+                            placeholder="e.g., Project_Starter_Dataset.zip"
+                            value={editStep.attachmentName || ''}
+                            onChange={(e) => setEditStep({ 
+                              ...editStep, 
+                              attachmentName: e.target.value
+                            })}
+                            style={{ background: '#ffffff' }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })()}

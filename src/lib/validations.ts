@@ -45,7 +45,7 @@ export const createLessonSchema = z.object({
 
 export const createLessonStepSchema = z.object({
   lessonId: z.string(),
-  stepType: z.enum(['intro', 'text', 'video', 'lab']),
+  stepType: z.enum(['intro', 'text', 'video', 'lab', 'assignment']),
   sortOrder: z.number().int().min(0).default(0),
   title: z.string().min(1).max(255),
   textContent: z.string().optional(),
@@ -55,6 +55,8 @@ export const createLessonStepSchema = z.object({
   labStarterCode: z.string().optional(),
   labSolutionCode: z.string().optional(),
   labInstructions: z.string().optional(),
+  attachmentUrl: z.string().optional().nullable(),
+  attachmentName: z.string().optional().nullable(),
 });
 
 // ── Progress Schemas ────────────────────────────────────────────

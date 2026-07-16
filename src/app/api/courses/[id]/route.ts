@@ -61,6 +61,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
                       labLanguage: true,
                       labStarterCode: true,
                       labInstructions: true,
+                      metadata: true,
                     },
                   },
                 },
@@ -146,6 +147,23 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       if (!hasPrivilege) {
         return apiError('Forbidden', 403);
       }
+    }
+
+    // Map 'text' steps marked as assignment to 'assignment' stepType
+    if (course && course.modules) {
+      course.modules.forEach((mod: any) => {
+        if (mod.lessons) {
+          mod.lessons.forEach((les: any) => {
+            if (les.steps) {
+              les.steps.forEach((st: any) => {
+                if (st.metadata && typeof st.metadata === 'object' && (st.metadata as any).isAssignment) {
+                  st.stepType = 'assignment';
+                }
+              });
+            }
+          });
+        }
+      });
     }
 
     // Prepare response data

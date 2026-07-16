@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { 
   BookOpen, FileText, Play, Code, Lock, CheckCircle2, ChevronRight, ChevronDown, 
   ArrowLeft, ArrowRight, Folder, Terminal, Sparkles, ChevronLeft, Star,
-  Volume2, Pause, Square
+  Volume2, Pause, Square, ClipboardList
 } from 'lucide-react';
 
 interface PageProps {
@@ -506,6 +506,7 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                                         case 'text': return <FileText size={12} style={{ color: 'var(--text-secondary)' }} />;
                                         case 'video': return <Play size={12} style={{ fill: 'currentColor', color: 'var(--text-secondary)' }} />;
                                         case 'lab': return <Code size={12} style={{ color: 'var(--text-secondary)' }} />;
+                                        case 'assignment': return <ClipboardList size={12} style={{ color: '#ec4899' }} />;
                                         default: return <FileText size={12} />;
                                       }
                                     };
@@ -578,6 +579,7 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                     case 'text': return <FileText size={14} />;
                     case 'video': return <Play size={14} style={{ fill: 'currentColor' }} />;
                     case 'lab': return <Code size={14} />;
+                    case 'assignment': return <ClipboardList size={14} style={{ color: '#ec4899' }} />;
                     default: return <FileText size={14} />;
                   }
                 };
@@ -779,7 +781,7 @@ export default function StepWiseLearningPage({ params }: PageProps) {
             </div>
           </div>
         ) : activeStep ? (() => {
-          const textPages = activeStep && (activeStep.stepType === 'intro' || activeStep.stepType === 'text')
+          const textPages = activeStep && (activeStep.stepType === 'intro' || activeStep.stepType === 'text' || activeStep.stepType === 'assignment')
             ? splitTextIntoPages(activeStep.textContent || '')
             : [];
 
@@ -816,6 +818,11 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                       <Code size={10} /> Lab Step
                     </span>
                   )}
+                  {activeStep.stepType === 'assignment' && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '20px', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', background: 'rgba(236,72,153,0.08)', color: '#db2777', border: '1px solid rgba(236,72,153,0.15)' }}>
+                      <ClipboardList size={10} /> Assignment Step
+                    </span>
+                  )}
                   
                   <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '12px', letterSpacing: '-0.5px', lineHeight: 1.2 }}>
                     {activeStep.title}
@@ -825,8 +832,8 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                   </p>
                 </div>
 
-                {/* Audio Reader Widget (Only show on Intro or Text reading steps) */}
-                {(activeStep.stepType === 'intro' || activeStep.stepType === 'text') && (
+                {/* Audio Reader Widget (Only show on Intro, Text, or Assignment reading steps) */}
+                {(activeStep.stepType === 'intro' || activeStep.stepType === 'text' || activeStep.stepType === 'assignment') && (
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -1006,8 +1013,8 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                 lineHeight: '1.6',
                 boxShadow: 'var(--shadow-premium)',
               }}>
-                {/* Render Intro/Text content with local page selector */}
-                {(activeStep.stepType === 'intro' || activeStep.stepType === 'text') && (
+                {/* Render Intro/Text/Assignment content with local page selector */}
+                {(activeStep.stepType === 'intro' || activeStep.stepType === 'text' || activeStep.stepType === 'assignment') && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ 
                       paddingRight: '8px'
@@ -1066,6 +1073,55 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                         >
                           Next Page →
                         </button>
+                      </div>
+                    )}
+                    {activeStep.stepType === 'assignment' && (activeStep.attachmentUrl || activeStep.metadata?.attachmentUrl) && (
+                      <div style={{
+                        marginTop: '24px',
+                        padding: '16px',
+                        background: 'linear-gradient(135deg, rgba(236,72,153,0.04), rgba(99,102,241,0.04))',
+                        border: '1px solid rgba(236,72,153,0.15)',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '12px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '1.25rem' }}>📎</span>
+                          <div>
+                            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)' }}>Attached Assignment File</div>
+                            <div style={{ fontSize: '10px', color: 'var(--text-tertiary)' }}>
+                              {activeStep.attachmentName || activeStep.metadata?.attachmentName || 'Click download link to retrieve files'}
+                            </div>
+                          </div>
+                        </div>
+                        <a
+                          href={activeStep.attachmentUrl || activeStep.metadata?.attachmentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            padding: '6px 14px',
+                            background: '#db2777',
+                            color: '#ffffff',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            boxShadow: '0 2px 8px rgba(219,39,119,0.25)',
+                            transition: 'all 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(219,39,119,0.35)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(219,39,119,0.25)';
+                          }}
+                        >
+                          Download Attachment
+                        </a>
                       </div>
                     )}
                   </div>
