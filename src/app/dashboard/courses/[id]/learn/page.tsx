@@ -617,11 +617,11 @@ export default function StepWiseLearningPage({ params }: PageProps) {
       </aside>
 
       {/* Main Content Workspace */}
-      <main ref={mainContentRef} style={{ padding: '32px 40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', background: '#fcfcfd' }}>
+      <main ref={mainContentRef} style={{ padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', background: '#fcfcfd' }}>
         {/* Course Progress header bar */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-primary)', paddingBottom: '20px', marginBottom: '32px',
+          borderBottom: '1px solid var(--border-primary)', paddingBottom: '12px', marginBottom: '20px',
           background: 'transparent',
         }}>
           <div>
@@ -1006,16 +1006,19 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                 background: '#ffffff',
                 border: '1px solid var(--border-primary)',
                 borderRadius: 'var(--radius-xl)',
-                padding: '40px',
+                padding: '24px',
                 color: 'var(--text-primary)',
-                lineHeight: '1.8',
+                lineHeight: '1.6',
                 boxShadow: 'var(--shadow-premium)',
               }}>
                 {/* Render Intro/Text content with local page selector */}
                 {(activeStep.stepType === 'intro' || activeStep.stepType === 'text') && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ 
                       minHeight: '220px',
+                      maxHeight: '380px',
+                      overflowY: 'auto',
+                      paddingRight: '8px'
                     }}>
                       <MarkdownRenderer text={textPages[currentTextPage]} />
                     </div>
@@ -1102,9 +1105,11 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                         color: 'var(--text-secondary)', 
                         fontSize: 'var(--font-size-sm)',
                         background: '#f9fafb',
-                        padding: '16px 20px',
+                        padding: '12px 16px',
                         borderRadius: '8px',
                         borderLeft: '4px solid var(--accent-primary)',
+                        maxHeight: '150px',
+                        overflowY: 'auto'
                       }}>
                         {activeStep.textContent}
                       </div>
@@ -1312,14 +1317,14 @@ export function splitTextIntoPages(text: string): string[] {
     return text.split('<!-- pagebreak -->').map(p => p.trim()).filter(Boolean);
   }
   
-  // 2. Auto-paginate very long text step content (over 1800 characters)
-  if (text.length > 1800) {
+  // 2. Auto-paginate very long text step content (over 800 characters)
+  if (text.length > 800) {
     const paragraphs = text.split(/\n\s*\n/);
     const pages: string[] = [];
     let currentPage = '';
     
     for (const para of paragraphs) {
-      if ((currentPage + para).length > 1200 && currentPage.length > 0) {
+      if ((currentPage + para).length > 600 && currentPage.length > 0) {
         pages.push(currentPage.trim());
         currentPage = para;
       } else {

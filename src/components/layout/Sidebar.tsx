@@ -83,16 +83,11 @@ export default function Sidebar() {
       animate={{ width: collapsed ? SIDEBAR_COLLAPSED : SIDEBAR_WIDTH }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       style={{
-        background: '#ffffff',
-        borderRight: '1px solid #e5e5e5',
         overflow: 'hidden',
       }}
     >
       {/* Brand header - logo only */}
       <div className={styles.brand} style={{
-        borderBottom: '1px solid #e5e5e5',
-        justifyContent: 'center',
-        padding: collapsed ? '12px 0' : '16px 24px',
       }}>
         <Link href={dashboardHome} className={styles.logo} style={{
           overflow: 'hidden',
@@ -172,7 +167,8 @@ export default function Sidebar() {
                     position: 'absolute',
                     inset: 0,
                     borderRadius: 'var(--radius-md)',
-                    background: '#f4f4f5',
+                    background: 'rgba(0, 0, 0, 0.04)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
                     zIndex: -1,
                   }}
                   transition={{ type: 'spring', stiffness: 380, damping: 30 }}
@@ -230,19 +226,19 @@ export default function Sidebar() {
         padding: '8px',
         display: 'flex',
         justifyContent: 'center',
-        borderTop: '1px solid #e5e5e5',
+        borderTop: '1px solid var(--border-primary)',
       }}>
         <motion.button
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          whileHover={{ scale: 1.05, background: '#f4f4f5' }}
+          whileHover={{ scale: 1.05, background: 'rgba(0, 0, 0, 0.04)' }}
           whileTap={{ scale: 0.95 }}
           style={{
-            borderRadius: '8px',
+            borderRadius: '12px',
             width: collapsed ? '36px' : '100%',
             height: '32px',
-            background: '#fafafa',
-            border: '1px solid #e5e5e5',
+            background: 'rgba(0, 0, 0, 0.02)',
+            border: '1px solid var(--border-primary)',
             color: 'var(--text-secondary)',
             display: 'flex',
             alignItems: 'center',
@@ -256,10 +252,10 @@ export default function Sidebar() {
           {collapsed ? <ChevronRight size={14} /> : <><ChevronLeft size={14} /> <span>Collapse</span></>}
         </motion.button>
       </div>
-
+ 
       {/* User section */}
       <div className={styles.userSection} style={{
-        borderTop: '1px solid #e5e5e5',
+        borderTop: '1px solid var(--border-primary)',
         padding: collapsed ? '16px 0' : '16px 24px',
         justifyContent: collapsed ? 'center' : 'flex-start',
       }}>

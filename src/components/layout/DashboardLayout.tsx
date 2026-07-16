@@ -96,18 +96,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className={styles.layout}>
       {/* Background patterns */}
       <div className="grid-bg" />
-      {/* Subtle warm ambient glow */}
-      <div style={{
-        position: 'fixed',
-        top: '20%',
-        right: '-10%',
-        width: '35vw',
-        height: '35vh',
-        background: 'radial-gradient(circle, rgba(245, 158, 11, 0.015) 0%, transparent 70%)',
-        filter: 'blur(100px)',
-        pointerEvents: 'none',
-        zIndex: -2,
-      }} />
       <Sidebar />
       <Header />
       <main className={styles.main}>

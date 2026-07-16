@@ -4,8 +4,8 @@
   left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border-primary);
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -100,13 +100,14 @@
 }
 
 .navItem:hover {
-  background: var(--bg-glass);
+  background: var(--bg-glass-hover);
   color: var(--text-primary);
 }
 
 .navItem.active {
-  background: #f4f4f5;
+  background: var(--bg-tertiary);
   color: var(--text-primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .navIcon {
@@ -144,7 +145,7 @@
   height: 36px;
   border-radius: var(--radius-full);
   background: var(--bg-glass);
-  border: 1px solid var(--border-secondary);
+  border: 1px solid var(--border-primary);
   display: flex;
   align-items: center;
   justify-content: center;
