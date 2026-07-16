@@ -14,12 +14,19 @@
 /* ---- Top Grid ---- */
 .topGrid {
   display: grid;
-  grid-template-columns: 1.6fr 1fr;
+  grid-template-columns: 1.4fr 1fr;
   gap: 28px;
   align-items: stretch;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1440px) {
+  .topGrid {
+    grid-template-columns: 1.15fr 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1200px) {
   .topGrid {
     grid-template-columns: 1fr;
   }
@@ -607,7 +614,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 102px;
+  height: calc(7 * var(--heatmap-cell-size, 12px) + 6 * var(--heatmap-cell-gap, 3px));
   padding: 0;
   text-align: right;
   width: 24px;
@@ -616,22 +623,22 @@
 .weekdayLabels span {
   font-size: 9.5px;
   color: var(--text-tertiary);
-  height: 12px;
-  line-height: 12px;
+  height: var(--heatmap-cell-size, 12px);
+  line-height: var(--heatmap-cell-size, 12px);
   font-weight: 500;
 }
 
 .heatmapGrid {
   display: grid;
-  grid-template-rows: repeat(7, 12px);
+  grid-template-rows: repeat(7, var(--heatmap-cell-size, 12px));
   grid-auto-flow: column;
-  gap: 3px;
+  gap: var(--heatmap-cell-gap, 3px);
   width: fit-content;
 }
 
 .heatmapCell {
-  width: 12px;
-  height: 12px;
+  width: var(--heatmap-cell-size, 12px);
+  height: var(--heatmap-cell-size, 12px);
   border-radius: 2px;
 }
 
@@ -696,6 +703,8 @@
   flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
+  --heatmap-cell-size: 12px;
+  --heatmap-cell-gap: 3px;
 }
 
 .progressHeader {
@@ -1218,6 +1227,51 @@
 }
 
 /* Responsive enhancements */
+@media (max-width: 1440px) {
+  .progressCard {
+    --heatmap-cell-size: 10px;
+    --heatmap-cell-gap: 2.5px;
+    padding: 16px;
+    gap: 8px;
+  }
+  .progressTitle {
+    font-size: 10px;
+  }
+  .progressDuration {
+    font-size: 10px;
+  }
+  .streakValueBadge {
+    font-size: 10.5px;
+  }
+  .communityMiniCard {
+    padding: 16px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .progressCard {
+    --heatmap-cell-size: 8px;
+    --heatmap-cell-gap: 1.5px;
+    padding: 12px;
+  }
+  .progressTitle {
+    font-size: 9px;
+  }
+  .progressDuration {
+    font-size: 9px;
+  }
+  .streakValueBadge {
+    font-size: 9.5px;
+  }
+  .weekdayLabels {
+    width: 18px;
+  }
+  .communityMiniCard {
+    padding: 12px;
+  }
+}
+
 @media (max-width: 768px) {
   .heroMiddleGrid {
     grid-template-columns: 1fr;
