@@ -120,10 +120,15 @@ async function main() {
         }
       });
     } else {
-      console.log(`Application for ${item.firstName} ${item.lastName} already exists. Updating resume URL...`);
+      console.log(`Application for ${item.firstName} ${item.lastName} already exists. Resetting to initial state...`);
       await prisma.application.update({
         where: { id: existingApp.id },
-        data: { resumeUrl: item.resumeUrl }
+        data: {
+          resumeUrl: item.resumeUrl,
+          status: ApplicationStatus.applied,
+          matchScore: null,
+          recruiterNotes: null
+        }
       });
     }
   }
