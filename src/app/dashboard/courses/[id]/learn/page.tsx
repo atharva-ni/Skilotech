@@ -55,9 +55,10 @@ export default function StepWiseLearningPage({ params }: PageProps) {
 
   const toggleModule = (modId: string) => {
     setExpandedModules(prev => {
-      const next = new Set(prev);
-      if (next.has(modId)) next.delete(modId);
-      else next.add(modId);
+      const next = new Set<string>();
+      if (!prev.has(modId)) {
+        next.add(modId);
+      }
       return next;
     });
   };
@@ -132,12 +133,7 @@ export default function StepWiseLearningPage({ params }: PageProps) {
     if (activeStepId && flatSteps.length > 0) {
       const activeStep = flatSteps.find(s => s.id === activeStepId);
       if (activeStep) {
-        setExpandedModules(prev => {
-          if (prev.has(activeStep.moduleId)) return prev;
-          const next = new Set(prev);
-          next.add(activeStep.moduleId);
-          return next;
-        });
+        setExpandedModules(new Set([activeStep.moduleId]));
         setExpandedLessons(prev => {
           if (prev.has(activeStep.lessonId)) return prev;
           const next = new Set(prev);
@@ -592,7 +588,7 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                     disabled={isLocked}
                     onClick={() => {
                       setActiveStepId(step.id);
-                      setExpandedModules(prev => new Set([...prev, step.moduleId]));
+                      setExpandedModules(new Set([step.moduleId]));
                       setExpandedLessons(prev => new Set([...prev, step.lessonId]));
                     }}
                     title={step.title}
@@ -1002,7 +998,6 @@ export default function StepWiseLearningPage({ params }: PageProps) {
 
               {/* Step Body rendering based on StepType */}
               <div style={{
-                flex: 1,
                 background: '#ffffff',
                 border: '1px solid var(--border-primary)',
                 borderRadius: 'var(--radius-xl)',
@@ -1015,9 +1010,6 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                 {(activeStep.stepType === 'intro' || activeStep.stepType === 'text') && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <div style={{ 
-                      minHeight: '220px',
-                      maxHeight: '380px',
-                      overflowY: 'auto',
                       paddingRight: '8px'
                     }}>
                       <MarkdownRenderer text={textPages[currentTextPage]} />
@@ -1043,6 +1035,10 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                             fontSize: '11px',
                             fontWeight: 600,
                             cursor: currentTextPage === 0 ? 'not-allowed' : 'pointer',
+                            opacity: currentTextPage === 0 ? 0.5 : 1,
+                            background: currentTextPage === 0 ? 'var(--bg-primary)' : '',
+                            color: currentTextPage === 0 ? 'var(--text-muted)' : '',
+                            borderColor: currentTextPage === 0 ? 'var(--border-primary)' : '',
                           }}
                         >
                           ← Previous Page
@@ -1062,6 +1058,10 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                             fontSize: '11px',
                             fontWeight: 600,
                             cursor: currentTextPage === textPages.length - 1 ? 'not-allowed' : 'pointer',
+                            opacity: currentTextPage === textPages.length - 1 ? 0.5 : 1,
+                            background: currentTextPage === textPages.length - 1 ? 'var(--bg-primary)' : '',
+                            color: currentTextPage === textPages.length - 1 ? 'var(--text-muted)' : '',
+                            borderColor: currentTextPage === textPages.length - 1 ? 'var(--border-primary)' : '',
                           }}
                         >
                           Next Page →
@@ -1222,7 +1222,7 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                     </button>
                   ) : (
                     <button
-                      disabled={activeStepIndex === flatSteps.length - 1}
+                      disabled={activeStepIndex === flatSteps.length - 1 || (textPages.length > 1 && currentTextPage !== textPages.length - 1)}
                       onClick={() => {
                         setActiveStepId(flatSteps[activeStepIndex + 1].id);
                         handleScrollToTop();
@@ -1230,17 +1230,17 @@ export default function StepWiseLearningPage({ params }: PageProps) {
                       style={{
                         padding: '10px 24px',
                         borderRadius: '8px',
-                        border: '1px solid var(--accent-primary)',
-                        background: 'var(--accent-primary)',
-                        color: '#ffffff',
                         fontSize: 'var(--font-size-xs)',
                         fontWeight: 600,
-                        cursor: activeStepIndex === flatSteps.length - 1 ? 'not-allowed' : 'pointer',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
-                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.15)',
                         transition: 'all 0.15s ease',
+                        cursor: (activeStepIndex === flatSteps.length - 1 || (textPages.length > 1 && currentTextPage !== textPages.length - 1)) ? 'not-allowed' : 'pointer',
+                        background: (activeStepIndex === flatSteps.length - 1 || (textPages.length > 1 && currentTextPage !== textPages.length - 1)) ? 'var(--bg-primary)' : 'var(--accent-primary)',
+                        borderColor: (activeStepIndex === flatSteps.length - 1 || (textPages.length > 1 && currentTextPage !== textPages.length - 1)) ? 'var(--border-primary)' : 'var(--accent-primary)',
+                        color: (activeStepIndex === flatSteps.length - 1 || (textPages.length > 1 && currentTextPage !== textPages.length - 1)) ? 'var(--text-muted)' : '#ffffff',
+                        boxShadow: (activeStepIndex === flatSteps.length - 1 || (textPages.length > 1 && currentTextPage !== textPages.length - 1)) ? 'none' : '0 4px 12px rgba(99, 102, 241, 0.15)',
                       }}
                     >
                       Next Step <ChevronRight size={16} />

@@ -1,7 +1,27 @@
 import Redis from 'ioredis';
 
+declare global {
+  var redisClient: Redis | undefined;
+}
+
 class InMemoryCache {
   private store = new Map<string, { value: string; expiresAt: number }>();
+
+  constructor() {
+    if (typeof window === 'undefined') {
+      const interval = setInterval(() => {
+        const now = Date.now();
+        for (const [key, item] of this.store.entries()) {
+          if (now > item.expiresAt) {
+            this.store.delete(key);
+          }
+        }
+      }, 5 * 60 * 1000);
+      if (interval && typeof interval.unref === 'function') {
+        interval.unref();
+      }
+    }
+  }
 
   async get(key: string): Promise<string | null> {
     const item = this.store.get(key);
@@ -62,7 +82,6 @@ const hasRedisConfig = redisUrl || redisHost;
 
 if (hasRedisConfig) {
   try {
-    console.log('Initializing Redis client connection...');
     const redisOptions: any = {
       maxRetriesPerRequest: 1,
       connectTimeout: 3000,
@@ -71,13 +90,23 @@ if (hasRedisConfig) {
       redisOptions.password = redisPassword;
     }
     
-    const redis = redisUrl
-      ? new Redis(redisUrl, redisOptions)
-      : new Redis({
-          host: redisHost,
-          port: redisPort ? parseInt(redisPort, 10) : 6379,
-          ...redisOptions,
-        });
+    let redis: Redis;
+    if (global.redisClient) {
+      redis = global.redisClient;
+    } else {
+      console.log('Initializing Redis client connection...');
+      redis = redisUrl
+        ? new Redis(redisUrl, redisOptions)
+        : new Redis({
+            host: redisHost,
+            port: redisPort ? parseInt(redisPort, 10) : 6379,
+            ...redisOptions,
+          });
+
+      if (process.env.NODE_ENV !== 'production') {
+        global.redisClient = redis;
+      }
+    }
 
     redis.on('error', (err) => {
       console.warn('Redis Connection Error, bypassing to memory cache:', err.message);
@@ -107,11 +136,18 @@ if (hasRedisConfig) {
       },
       flushPattern: async (pattern) => {
         try {
-          const keys = await redis.keys(pattern);
-          if (keys.length > 0) {
-            return await redis.del(...keys);
-          }
-          return 0;
+          let cursor = '0';
+          let totalDeleted = 0;
+          do {
+            const reply = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+            cursor = reply[0];
+            const keys = reply[1];
+            if (keys.length > 0) {
+              const deleted = await redis.del(...keys);
+              totalDeleted += deleted;
+            }
+          } while (cursor !== '0');
+          return totalDeleted;
         } catch {
           return 0;
         }
