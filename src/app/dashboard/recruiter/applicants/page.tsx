@@ -99,6 +99,7 @@ export default function RecruiterApplicants() {
   // AI Screening action states
   const [screeningId, setScreeningId] = useState<string | null>(null);
   const [viewingReportApp, setViewingReportApp] = useState<any | null>(null);
+  const [screenedApps, setScreenedApps] = useState<Record<string, boolean>>({});
 
   // Notes Modal state
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
@@ -136,6 +137,7 @@ export default function RecruiterApplicants() {
       if (!res.ok) throw new Error(data.error || 'Failed to screen candidate');
       toast.success('AI Screening evaluation complete!');
       await fetchApplicants();
+      setScreenedApps(prev => ({ ...prev, [appId]: true }));
       // Auto-open report modal for the newly screened application
       setViewingReportApp(data.application);
     } catch (err: any) {
@@ -195,7 +197,7 @@ export default function RecruiterApplicants() {
     {
       header: 'Match Score',
       accessor: (item: any) => (
-        item.matchScore !== null && item.matchScore !== undefined ? (
+        screenedApps[item.id] && item.matchScore !== null && item.matchScore !== undefined ? (
           <span style={{
             fontWeight: 700,
             color: item.matchScore >= 90 ? 'var(--success)' : item.matchScore >= 80 ? 'var(--accent-primary-hover)' : 'var(--warning)'
@@ -256,7 +258,7 @@ export default function RecruiterApplicants() {
                 borderTopColor: 'transparent', animation: 'spin 0.6s linear infinite'
               }} /> Screening...
             </span>
-          ) : item.matchScore !== null && item.matchScore !== undefined ? (
+          ) : (screenedApps[item.id] && item.matchScore !== null && item.matchScore !== undefined) ? (
             <button
               onClick={() => setViewingReportApp(item)}
               className="btn btn-sm"
@@ -287,7 +289,7 @@ export default function RecruiterApplicants() {
       header: 'Pipeline Actions',
       accessor: (item: any) => (
         <div style={{ display: 'flex', gap: '6px' }}>
-          {item.status === 'applied' && (
+          {(item.status === 'applied' || item.status === 'rejected') && (
             <button
               onClick={() => openStatusModal(item, 'shortlisted')}
               className="btn btn-primary btn-sm"
@@ -314,7 +316,7 @@ export default function RecruiterApplicants() {
               Hire
             </button>
           )}
-          {item.status !== 'hired' && item.status !== 'rejected' && (
+          {item.status !== 'hired' && (
             <button
               onClick={() => openStatusModal(item, 'rejected')}
               className="btn btn-danger btn-sm"
