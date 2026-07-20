@@ -228,13 +228,13 @@ export async function GET() {
       }
     }
 
-    // Generate heatmap cells (7 rows x 13 columns = 91 cells)
+    // Generate heatmap cells (7 rows x 16 columns = 112 cells)
     const heatmapCells: { date: string; problemsCount: number; modulesCount: number; shade: number; isFuture?: boolean }[] = [];
     const MS_PER_DAY = 24 * 60 * 60 * 1000;
     const today = new Date();
     const todayWeekday = today.getDay(); // 0 = Sun, 1 = Mon, ... 6 = Sat
     const futurePadding = 6 - todayWeekday;
-    const activeCellsCount = 91 - futurePadding;
+    const activeCellsCount = 112 - futurePadding;
 
     for (let i = activeCellsCount - 1; i >= 0; i--) {
       const cellDate = new Date(today.getTime() - i * MS_PER_DAY);
