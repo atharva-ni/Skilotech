@@ -42,6 +42,7 @@ const roleDashboardPaths: Record<string, string> = {
   admin: '/dashboard/admin',
   super_admin: '/dashboard/admin',
   instructor: '/dashboard/instructor',
+  recruiter: '/dashboard/recruiter',
 };
 
 const fallbackJobs = [

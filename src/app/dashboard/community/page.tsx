@@ -482,27 +482,39 @@ export default function Community() {
 
               return (
                 <div key={post.id} id={`post-${post.id}`} className={styles.discussionRow}>
-                  {/* Avatar */}
-                  <div className={styles.rowAvatar} style={{ background: avatarColor(name) }}>
-                    {post.author.avatarUrl ? (
-                      <img src={post.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                    ) : (post.author.firstName?.charAt(0) || '?')}
-                  </div>
-
-                  {/* Main content */}
                   <div className={styles.rowMain}>
-                    <div className={styles.rowTitleLine}>
-                      <span className={`${styles.badge} ${badgeClass(type)}`}>{type}</span>
-                      {isSolved && <span className={styles.solvedBadge}><CheckCircle2 size={9} /> Solved</span>}
-                      <h3 className={styles.rowTitle}>{title}</h3>
+                    {/* Header Row: Avatar, Name, Time, and Category Badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className={styles.rowAvatar} style={{ background: avatarColor(name) }}>
+                          {post.author.avatarUrl ? (
+                            <img src={post.author.avatarUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                          ) : (
+                            post.author.firstName?.charAt(0) || '?'
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{name}</span>
+                          <span className={styles.rowTime}>{timeAgo(post.createdAt)}</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className={`${styles.badge} ${badgeClass(type)}`}>{type}</span>
+                        {isSolved && <span className={styles.solvedBadge}><CheckCircle2 size={10} /> Solved</span>}
+                      </div>
                     </div>
 
+                    {/* Post Title */}
+                    <h3 className={styles.rowTitle} style={{ marginBottom: '8px' }}>{title}</h3>
+
+                    {/* Post Body */}
                     {body && (
-                      <div style={{ marginTop: '4px' }}>
+                      <div style={{ marginTop: '4px', marginBottom: '12px' }}>
                         {renderPostBody(body)}
                       </div>
                     )}
 
+                    {/* Tags */}
                     {displayTags.length > 0 && (
                       <div className={styles.rowTags}>
                         {displayTags.map((tag: string) => (
@@ -511,37 +523,66 @@ export default function Community() {
                       </div>
                     )}
 
+                    {/* Action Toolbar Footer */}
                     <div className={styles.rowMeta}>
-                      <span className={styles.rowMetaItem} style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
-                        {name}
-                      </span>
-                      <button className={`${styles.rowMetaBtn} ${liked ? styles.rowMetaBtnActive : ''}`} onClick={() => like(post.id)}>
-                        <Heart size={12} fill={liked ? 'currentColor' : 'none'} /> {post.likesCount}
+                      <button 
+                        className={`${styles.rowMetaBtn} ${liked ? styles.rowMetaBtnActive : ''}`} 
+                        onClick={() => like(post.id)}
+                      >
+                        <Heart size={13} fill={liked ? 'currentColor' : 'none'} /> 
+                        <span>{post.likesCount} {post.likesCount === 1 ? 'Like' : 'Likes'}</span>
                       </button>
                       <button
                         className={`${styles.rowMetaBtn} ${commOpen ? styles.rowMetaBtnActive : ''}`}
                         onClick={() => toggleComments(post.id)}
-                        style={commOpen ? { color: 'var(--text-primary)' } : {}}
                       >
-                        <MessageCircle size={12} /> {post.commentsCount}
+                        <MessageSquare size={13} /> 
+                        <span>{post.commentsCount} {post.commentsCount === 1 ? 'Reply' : 'Replies'}</span>
                       </button>
+
+                      {/* Right actions */}
+                      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {type === 'question' && post.authorId === user?.id && (
+                          <button
+                            className={styles.rowActionBtn}
+                            onClick={() => setSolved(p => { const n = new Set(p); n.has(post.id) ? n.delete(post.id) : n.add(post.id); return n; })}
+                            title={isSolved ? 'Unmark solved' : 'Mark solved'}
+                            style={isSolved ? { color: '#10b981' } : {}}
+                          >
+                            <CheckCircle2 size={13} />
+                          </button>
+                        )}
+                        <button className={styles.rowActionBtn} title="Bookmark"><Bookmark size={13} /></button>
+                        {canDelete ? (
+                          <button 
+                            className={styles.rowActionBtn} 
+                            onClick={() => deletePost(post.id)} 
+                            title="Delete"
+                            style={{ color: 'var(--text-tertiary)' }}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        ) : (
+                          <button className={styles.rowActionBtn} title="More"><MoreHorizontal size={13} /></button>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Comments */}
+                    {/* Comments / Replies Section */}
                     {commOpen && (
                       <div className={styles.commentsPanel}>
                         <h5 className={styles.commentsTitle}>Replies</h5>
                         {loadingComments[post.id] ? (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center' }}>Loading...</div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px 0' }}>Loading...</div>
                         ) : !comments[post.id]?.length ? (
-                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', fontStyle: 'italic', padding: '8px 0' }}>
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', fontStyle: 'italic', padding: '12px 0' }}>
                             No replies yet
                           </div>
                         ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {comments[post.id].map((c: any) => (
                               <div key={c.id} className={styles.commentItem}>
-                                <CornerDownRight size={11} style={{ color: 'var(--text-muted)', marginTop: '10px', flexShrink: 0 }} />
+                                <CornerDownRight size={12} style={{ color: 'var(--text-muted)', marginTop: '8px', flexShrink: 0 }} />
                                 <div className={styles.commentBody}>
                                   <div className={styles.commentMeta}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -550,7 +591,7 @@ export default function Community() {
                                     </div>
                                     {(c.authorId === user?.id || user?.role === 'admin' || (user?.role as string) === 'super_admin') && (
                                       <button className={styles.commentDeleteBtn} onClick={() => deleteComment(c.id, post.id)}>
-                                        <Trash2 size={10} />
+                                        <Trash2 size={11} />
                                       </button>
                                     )}
                                   </div>
@@ -568,36 +609,11 @@ export default function Community() {
                             onChange={e => setReplyText(p => ({ ...p, [post.id]: e.target.value }))}
                           />
                           <button type="submit" disabled={replyPosting[post.id]} className={styles.replySubmitBtn}>
-                            <Send size={11} />
+                            <Send size={12} />
                           </button>
                         </form>
                       </div>
                     )}
-                  </div>
-
-                  {/* Right side: time + actions */}
-                  <div className={styles.rowRight}>
-                    <span className={styles.rowTime}>{timeAgo(post.createdAt)}</span>
-                    <div className={styles.rowActions}>
-                      {type === 'question' && post.authorId === user?.id && (
-                        <button
-                          className={styles.rowActionBtn}
-                          onClick={() => setSolved(p => { const n = new Set(p); n.has(post.id) ? n.delete(post.id) : n.add(post.id); return n; })}
-                          title={isSolved ? 'Unmark solved' : 'Mark solved'}
-                          style={isSolved ? { color: '#10b981' } : {}}
-                        >
-                          <CheckCircle2 size={13} />
-                        </button>
-                      )}
-                      <button className={styles.rowActionBtn} title="Bookmark"><Bookmark size={13} /></button>
-                      {canDelete ? (
-                        <button className={styles.rowActionBtn} onClick={() => deletePost(post.id)} title="Delete">
-                          <Trash2 size={13} />
-                        </button>
-                      ) : (
-                        <button className={styles.rowActionBtn} title="More"><MoreHorizontal size={13} /></button>
-                      )}
-                    </div>
                   </div>
                 </div>
               );
