@@ -208,13 +208,6 @@ export default function StudentJobBoard() {
           >
             Explore Job Listings ({filteredJobs.length})
           </button>
-          <button
-            onClick={() => setActiveTab('applications')}
-            className={`btn ${activeTab === 'applications' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '8px 20px', borderRadius: '8px', fontSize: 'var(--font-size-xs)' }}
-          >
-            Track Your Applications ({applications.length})
-          </button>
         </div>
       </div>
 
